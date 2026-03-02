@@ -83,6 +83,7 @@ export async function exportBatchPDF(
         const imgData = ctx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
         const data = imgData.data;
         let top = null, bottom = null, left = null, right = null;
+        let hasContent = false;
         for (let y = 0; y < tempCanvas.height; y++) {
             for (let x = 0; x < tempCanvas.width; x++) {
                 const idx = (y * tempCanvas.width + x) * 4;
@@ -92,11 +93,16 @@ export async function exportBatchPDF(
                 const alpha = data[idx+3] as number;
                 
                 if (alpha > 10 && (r < 240 || g < 240 || b < 240)) {
+                    hasContent = true;
                     if (top === null) top = y; bottom = y;
                     if (left === null || x < left) left = x;
                     if (right === null || x > right) right = x;
                 }
             }
+        }
+
+        if (!hasContent) {
+            throw new Error(`第 ${i} 页未检测到条码，请检查 PDF 文件！`);
         }
 
         let cropCanvas = tempCanvas;
