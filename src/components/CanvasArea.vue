@@ -1,5 +1,5 @@
 <template>
-  <div class="flex-1 overflow-auto relative canvas-bg bg-[#f3f4f6]" id="workspace-container" @mousedown="clearActive"
+  <div class="flex-1 overflow-auto relative canvas-bg bg-slate-50" id="workspace-container" @mousedown="clearActive"
     @dragover.prevent @dragenter.prevent @drop.prevent="handleDrop">
     <div class="min-w-full min-h-full flex p-10">
       
@@ -9,18 +9,18 @@
         <div id="canvasWrapper" class="absolute top-0 left-0 origin-top-left transition-transform duration-150"
           :style="{ transform: `scale(${scale})` }">
 
-          <div id="canvas" class="relative bg-white shadow-[0_12px_30px_rgba(0,0,0,0.15)] overflow-hidden"
+          <div id="canvas" class="relative bg-white shadow-[0_12px_30px_rgba(0,0,0,0.15)] overflow-hidden ring-1 ring-slate-200"
             :style="{ width: `${wMM * MM_TO_PX * ZOOM_FACTOR}px`, height: `${hMM * MM_TO_PX * ZOOM_FACTOR}px` }">
 
             <div v-for="el in elements" :key="el.id" :id="'el-' + el.id"
               class="absolute cursor-move box-border select-none group"
-              :class="activeId === el.id && editingId !== el.id ? 'ring-2 ring-[#1677ff] ring-offset-0 z-[100]' : 'ring-1 ring-transparent hover:ring-gray-300 hover:ring-dashed'"
+              :class="activeId === el.id && editingId !== el.id ? 'ring-2 ring-primary-500 ring-offset-0 z-[100]' : 'ring-1 ring-transparent hover:ring-slate-300 hover:ring-dashed'"
               :style="{ width: el.style.width, height: el.style.height, left: el.style.left, top: el.style.top, zIndex: el.style.zIndex }"
               @mousedown.stop="startDrag($event, el)">
 
               <div v-if="el.type === 'text'" :contenteditable="editingId === el.id"
                 @dblclick.stop="startEditing(el.id, $event)" @blur="finishEditing($event, el)"
-                class="w-full h-full whitespace-pre-wrap break-words outline-none leading-snug text-black"
+                class="w-full h-full whitespace-pre-wrap break-words outline-none leading-snug text-slate-900"
                 :class="{ 'cursor-text': editingId === el.id }"
                 :style="{ fontSize: el.fontSize, fontWeight: el.fontWeight }">{{ el.content }}</div>
 
@@ -28,13 +28,13 @@
                 class="w-full h-full object-contain pointer-events-none" draggable="false" />
 
               <div v-else-if="el.type === 'barcode'"
-                class="w-full h-full bg-white border border-black flex flex-col items-center justify-center overflow-hidden p-1">
-                <div class="w-[80%] h-[45%] bg-black mt-1"></div>
+                class="w-full h-full bg-white border border-slate-900 flex flex-col items-center justify-center overflow-hidden p-1">
+                <div class="w-[80%] h-[45%] bg-slate-900 mt-1"></div>
                 <span
-                  class="text-[11px] mt-1 text-[#ff4d4f] font-bold text-center leading-tight tracking-wider">占位条码</span>
+                  class="text-[11px] mt-1 text-danger font-bold text-center leading-tight tracking-wider">占位条码</span>
               </div>
 
-              <div v-else-if="el.type === 'line'" class="w-full h-full bg-black pointer-events-none"></div>
+              <div v-else-if="el.type === 'line'" class="w-full h-full bg-slate-900 pointer-events-none"></div>
 
               <div v-if="activeId === el.id && editingId !== el.id">
                 <template v-if="['image', 'barcode', 'text'].includes(el.type)">
@@ -71,20 +71,20 @@ import { cropImageWhitespace } from '../utils/imageCrop';
 // 组件通信 (Props & Emits & Models)
 // ==========================================
 const props = defineProps<{ wMM: number; hMM: number; scale: number; }>();
-const emit = defineEmits<{
-  'update:scale': [value: number];
-}>();
+// const emit = defineEmits<{
+//   'update:scale': [value: number];
+// }>();
 
 // 保留您优雅的 Vue 3.4 双向绑定写法
 const elements = defineModel<LabelElement[]>('elements', { required: true });
 const activeId = defineModel<string | null>('activeId', { required: true });
 
-// ==========================================
-// 常量、状态与画布缩放
-// ==========================================
-function zoomIn() { emit('update:scale', Math.min(3, props.scale + 0.1)); }
-function zoomOut() { emit('update:scale', Math.max(0.2, props.scale - 0.1)); }
-function resetZoom() { emit('update:scale', 1); }
+// // ==========================================
+// // 常量、状态与画布缩放
+// // ==========================================
+// function zoomIn() { emit('update:scale', Math.min(3, props.scale + 0.1)); }
+// function zoomOut() { emit('update:scale', Math.max(0.2, props.scale - 0.1)); }
+// function resetZoom() { emit('update:scale', 1); }
 
 const editingId = ref<string | null>(null);
 const MM_TO_PX = 3.78;

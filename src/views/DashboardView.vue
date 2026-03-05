@@ -1,308 +1,174 @@
 <template>
-    <div class="max-w-[1300px] mx-auto p-8 h-full flex flex-col relative z-10 overflow-hidden">
-        <header
-            class="flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm mb-8 border border-[#e5e7eb] shrink-0">
-            <h1 class="text-2xl font-extrabold text-[#1f2937] flex items-center gap-2 tracking-wide">
-                <svg viewBox="0 0 100 100" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
-                    <g transform="translate(1, -7)">
-                        <g transform="translate(50,50) rotate(-40) translate(-50,-50)">
-                            <path
-                                d="M20,30 h50 a10,10 0 0 1 10,10 v40 a10,10 0 0 1 -10,10 h-50 a10,10 0 0 1 -10,-10 v-40 a10,10 0 0 1 10,-10 z"
-                                fill="#1b6Cff" />
-                            <path d="M55,30 h15 a10,10 0 0 1 10,10 v15 L55,30 z" fill="#ff8a3d" />
-                            <path d="M55,30 v25 h25 L55,30 z" fill="#1455c0" opacity="0.6" />
-                        </g>
-                        <path d="M 25 65 L 45 80 L 85 35" fill="none" stroke="#ff8a3d" stroke-width="10"
-                            stroke-linecap="round" stroke-linejoin="round" />
-                    </g>
-                </svg>
-                易标签 <span class="text-sm font-bold text-[#9ca3af] ml-1 tracking-normal">Easy Label</span>
-            </h1>
-            <div class="flex gap-3">
-                <button @click="refreshPage" :disabled="store.isLoading"
-                    class="btn btn-outline text-[#6b7280] hover:text-[#1677ff] hover:bg-[#eff6ff] disabled:opacity-50">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                    </svg> 刷新
-                </button>
-                <div class="w-px h-5 bg-[#e5e7eb] mt-2 mx-1"></div>
-                <button @click="showImportShareModal = true" :disabled="store.isLoading"
-                    class="btn btn-outline text-[#0284c7] bg-[#f0f9ff] hover:bg-[#e0f2fe] disabled:opacity-50 transition-all hover:-translate-y-0.5 shadow-sm">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                        <rect x="3" y="19" width="18" height="2" rx="1"></rect>
-                    </svg>获取分享的模板
-                </button>
-                <button @click="triggerJsonImport" :disabled="store.isLoading"
-                    class="btn btn-outline disabled:opacity-50">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="17 8 12 3 7 8"></polyline>
-                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                    </svg>导入本地库
-                </button>
-                <button @click="exportJsonLibrary" :disabled="store.isLoading"
-                    class="btn btn-outline disabled:opacity-50">
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>导出本地库
-                </button>
-                <input type="file" ref="jsonInputRef" accept=".json" class="hidden" @change="handleJsonImport" />
+  <div class="max-w-[1400px] mx-auto p-6 sm:p-8 h-full flex flex-col relative z-10 overflow-hidden selection:bg-primary-100 selection:text-primary-700">
+    
+    <header class="flex justify-between items-center bg-white/80 backdrop-blur-xl p-5 sm:px-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-8 border border-white shrink-0">
+      <h1 class="text-2xl font-black text-slate-900 flex items-center gap-3 tracking-tight">
+        <div class="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center border border-primary-100 shadow-sm">
+          <svg viewBox="0 0 100 100" width="26" height="26" xmlns="http://www.w3.org/2000/svg"><g transform="translate(1, -7)"><g transform="translate(50,50) rotate(-40) translate(-50,-50)"><path d="M20,30 h50 a10,10 0 0 1 10,10 v40 a10,10 0 0 1 -10,10 h-50 a10,10 0 0 1 -10,-10 v-40 a10,10 0 0 1 10,-10 z" fill="#1677ff" /><path d="M55,30 h15 a10,10 0 0 1 10,10 v15 L55,30 z" fill="#f59e0b" /><path d="M55,30 v25 h25 L55,30 z" fill="#0f5ee6" opacity="0.6" /></g><path d="M 25 65 L 45 80 L 85 35" fill="none" stroke="#f59e0b" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" /></g></svg>
+        </div>
+        易标签 <span class="text-[13px] font-bold text-slate-400 ml-1 tracking-widest uppercase">Pro</span>
+      </h1>
+      
+      <div class="flex items-center gap-2 sm:gap-3">
+        <button @click="showUnbindModal = true" :disabled="store.isLoading" class="btn text-danger hover:bg-danger-bg px-4 h-10 rounded-xl transition-colors shadow-sm border border-danger/10">
+           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>解绑设备
+        </button>
+        <div class="w-px h-6 bg-slate-200 mx-1"></div>
+        <button @click="refreshPage" :disabled="store.isLoading" class="btn btn-subtle text-slate-500 hover:text-primary-600 px-4 h-10 rounded-xl">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>刷新
+        </button>
+        <button @click="showImportShareModal = true" :disabled="store.isLoading" class="btn text-primary-600 bg-primary-50 hover:bg-primary-100 border border-primary-100 shadow-sm h-10 rounded-xl px-4">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line><rect x="3" y="19" width="18" height="2" rx="1"></rect></svg>提取分享
+        </button>
+        <button @click="triggerJsonImport" :disabled="store.isLoading" class="btn btn-outline h-10 rounded-xl px-4">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>导入配置
+        </button>
+        <button @click="exportJsonLibrary" :disabled="store.isLoading" class="btn btn-outline h-10 rounded-xl px-4">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>导出备份
+        </button>
+        <input type="file" ref="jsonInputRef" accept=".json" class="hidden" @change="handleJsonImport" />
+      </div>
+    </header>
+
+    <div class="w-full flex-1 overflow-y-auto custom-scrollbar pr-2 min-h-0 flex flex-col">
+      <div class="flex justify-between items-end mb-6 shrink-0 px-2">
+        <div><h2 class="text-2xl font-black text-slate-900 tracking-wide">我的标签库</h2><p class="text-sm text-slate-500 font-medium mt-1">云端实时同步您的专属打印模板</p></div>
+        <button @click="openNewEditor" class="btn btn-primary px-8 h-12 rounded-full text-[15px] font-extrabold shadow-lg shadow-primary-500/30 hover:-translate-y-1 transition-all">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>新建空白标签
+        </button>
+      </div>
+
+      <div v-if="store.savedLabels.length === 0" class="w-full py-24 flex flex-col items-center text-slate-400 border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50 shrink-0">
+        <span class="font-bold tracking-widest text-[15px] text-slate-500">暂无保存的标签，点击上方按钮开始设计</span>
+      </div>
+
+      <div v-else class="grid grid-cols-2 md:grid-cols-5 gap-6 p-2 shrink-0">
+        
+        <div v-for="label in store.savedLabels" :key="label.id" class="group bg-white rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-primary-300 hover:-translate-y-1.5 transition-all duration-300 flex flex-col overflow-hidden cursor-pointer relative" @click="openEditor(label)">
+          <div class="w-full aspect-square bg-slate-50/80 flex items-center justify-center p-6 relative overflow-hidden">
+            <LabelThumbnail :label="label" class="max-w-full max-h-full drop-shadow-sm transition-transform duration-500 group-hover:scale-105" />
+            <div class="absolute inset-0 bg-slate-900/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+
+            <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-1 bg-white/95 backdrop-blur-md px-2 py-1.5 rounded-full shadow-lg border border-slate-100 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 z-20">
+              <button @click.stop="triggerRenameModal(label)" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-500 hover:text-primary-600 hover:bg-primary-50 transition-colors tooltip-trigger"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg><div class="tooltip-text">重命名</div></button>
+              <div class="w-px h-4 bg-slate-200"></div>
+              <button @click.stop="uploadLabelToCloud(label)" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-500 hover:text-primary-600 hover:bg-primary-50 transition-colors tooltip-trigger"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg><div class="tooltip-text">分享</div></button>
+              <div class="w-px h-4 bg-slate-200"></div>
+              <button @click.stop="triggerDeleteModal(label.id)" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-500 hover:text-danger hover:bg-danger-bg transition-colors tooltip-trigger"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg><div class="tooltip-text text-danger">删除</div></button>
             </div>
-        </header>
-
-        <div class="w-full flex-1 overflow-y-auto custom-scrollbar pr-2 min-h-0 flex flex-col">
-            <div class="flex justify-between items-center mb-4 border-b-2 border-[#e5e7eb] pb-3 shrink-0">
-                <h2 class="text-[17px] font-extrabold text-[#1f2937] tracking-wide">我的标签</h2>
-                <button @click="openNewEditor"
-                    class="btn bg-gradient-to-r from-[#1677ff] to-[#3b82f6] text-white px-7 py-3 rounded-xl font-extrabold shadow-[0_6px_20px_rgba(22,119,255,0.3)] hover:shadow-[0_8px_25px_rgba(22,119,255,0.45)] hover:-translate-y-0.5 transform transition-all duration-300 flex items-center gap-2 text-[15px] tracking-wide border-none outline-none cursor-pointer">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3"
-                        stroke-linecap="round">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    新建标签
-                </button>
-            </div>
-
-            <div v-if="store.savedLabels.length === 0"
-                class="w-full py-16 flex flex-col items-center text-[#9ca3af] border-2 border-dashed border-[#d1d5db] rounded-2xl bg-white shadow-sm shrink-0">
-                <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5"
-                    class="mb-4 text-[#d1d5db]">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
-                <span class="font-medium tracking-widest text-sm">暂无保存的标签，请点击上方“新建标签”开始设计</span>
-            </div>
-            <div v-else class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 p-1 shrink-0">
-                <div v-for="label in store.savedLabels" :key="label.id"
-                    class="bg-white border border-[#e5e7eb] rounded-2xl flex flex-col overflow-hidden hover:-translate-y-1.5 hover:border-[#1677ff] hover:shadow-[0_12px_24px_rgba(22,119,255,0.15)] transition-all duration-300 group">
-
-                    <div class="w-full aspect-square cursor-pointer overflow-hidden relative bg-[#f8fafc] flex items-center justify-center p-4"
-                        @click="openEditor(label)">
-                        <LabelThumbnail :label="label" class="max-w-full max-h-full drop-shadow-sm" />
-
-                        <div
-                            class="absolute inset-0 bg-[#0000000d] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                            <span
-                                class="bg-[#ffffffeb] text-[#1677ff] text-xs font-bold px-4 py-2 rounded-full shadow-md backdrop-blur-sm tracking-widest flex items-center gap-1 mb-8">点击编辑</span>
-                        </div>
-
-                        <div
-                            class="absolute bottom-4 left-0 w-full flex justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-[10px] group-hover:translate-y-0 z-20">
-
-                            <button @click.stop="triggerRenameModal(label)"
-                                class="relative w-9 h-9 bg-[#ffffffeb] backdrop-blur-md shadow-[0_4px_10px_rgba(0,0,0,0.1)] rounded-full flex justify-center items-center text-[#6b7280] hover:text-[#1677ff] hover:bg-white transition-all transform hover:scale-110 active:scale-95 group/btn">
-                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
-                                    stroke-width="2.5">
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                </svg>
-                                <div
-                                    class="absolute -top-9 left-1/2 transform -translate-x-1/2 bg-[#1f2937] text-white text-[11px] px-2 py-1 rounded shadow-lg opacity-0 group-hover/btn:opacity-100 pointer-events-none whitespace-nowrap transition-opacity">
-                                    重命名</div>
-                            </button>
-
-                            <button @click.stop="uploadLabelToCloud(label)" :disabled="store.isLoading"
-                                class="relative w-9 h-9 bg-[#ffffffeb] backdrop-blur-md shadow-[0_4px_10px_rgba(0,0,0,0.1)] rounded-full flex justify-center items-center text-[#6b7280] hover:text-[#0284c7] hover:bg-white disabled:opacity-50 transition-all transform hover:scale-110 active:scale-95 group/btn">
-                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
-                                    stroke-width="2.5">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="17 8 12 3 7 8"></polyline>
-                                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                                </svg>
-                                <div
-                                    class="absolute -top-9 left-1/2 transform -translate-x-1/2 bg-[#1f2937] text-white text-[11px] px-2 py-1 rounded shadow-lg opacity-0 group-hover/btn:opacity-100 pointer-events-none whitespace-nowrap transition-opacity">
-                                    生成分享码</div>
-                            </button>
-
-                            <button @click.stop="triggerDeleteModal(label.id)"
-                                class="relative w-9 h-9 bg-[#ffffffeb] backdrop-blur-md shadow-[0_4px_10px_rgba(0,0,0,0.1)] rounded-full flex justify-center items-center text-[#6b7280] hover:text-[#ff4d4f] hover:bg-[#fff1f0] transition-all transform hover:scale-110 active:scale-95 group/btn">
-                                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor"
-                                    stroke-width="2.5">
-                                    <polyline points="3 6 5 6 21 6"></polyline>
-                                    <path
-                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
-                                    </path>
-                                </svg>
-                                <div
-                                    class="absolute -top-9 left-1/2 transform -translate-x-1/2 bg-[#1f2937] text-white text-[11px] px-2 py-1 rounded shadow-lg opacity-0 group-hover/btn:opacity-100 pointer-events-none whitespace-nowrap transition-opacity">
-                                    删除</div>
-                            </button>
-
-                        </div>
-                    </div>
-
-                    <div class="py-3 px-4 border-t border-[#f3f4f6] bg-white flex justify-center items-center shrink-0">
-                        <div class="font-bold text-[14px] text-center truncate text-[#374151]" :title="label.name">{{
-                            label.name }}</div>
-                    </div>
-
-                </div>
-            </div>
-
-            <div v-if="totalPages > 1" class="flex justify-center items-center gap-3 mt-6 shrink-0">
-                <button @click="changePage(currentPage - 1)" :disabled="currentPage === 1" class="page-btn">上一页</button>
-                <span
-                    class="text-[14px] font-bold text-[#6b7280] bg-white px-4 py-1.5 rounded-lg border border-[#e5e7eb] shadow-sm">
-                    第 <span class="text-[#1677ff] mx-0.5">{{ currentPage }}</span> / {{ totalPages }} 页
-                </span>
-                <button @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages"
-                    class="page-btn">下一页</button>
-            </div>
-
-            <div class="mt-12 flex justify-between items-center mb-4 border-b-2 border-[#e5e7eb] pb-3 shrink-0">
-                <h2 class="text-[17px] font-extrabold text-[#1f2937] tracking-wide">推荐模板 <span
-                        class="text-xs text-[#10b981] ml-2 px-2 py-0.5 bg-[#d1fae5] rounded-full border border-[#10b981] tracking-normal">敬请期待</span>
-                </h2>
-            </div>
-            <div
-                class="w-full flex-1 min-h-[160px] flex flex-col items-center justify-center border-2 border-dashed border-[#d1d5db] rounded-2xl bg-white/50 shrink-0 mb-8">
-                <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5"
-                    class="mb-3 text-[#d1d5db]">
-                    <path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"></path>
-                    <line x1="16" y1="8" x2="2" y2="22"></line>
-                    <line x1="17.5" y1="15" x2="9" y2="6.5"></line>
-                </svg>
-                <span class="text-[#9ca3af] font-bold tracking-widest text-sm">海量精美云端模板即将上线，助力快速排版...</span>
-            </div>
+          </div>
+          <div class="p-4 border-t border-slate-100 bg-white flex justify-center items-center shrink-0">
+            <div class="font-bold text-[14px] text-slate-700 truncate group-hover:text-primary-600 transition-colors">{{ label.name }}</div>
+          </div>
         </div>
 
-        <div v-if="showRenameModal"
-            class="fixed inset-0 bg-[#00000099] flex items-center justify-center z-[2000] backdrop-blur-sm px-4">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[400px] overflow-hidden flex flex-col">
-                <div class="px-6 py-5 bg-[#f9fafb] border-b border-[#e5e7eb]">
-                    <h3 class="font-extrabold text-[17px] text-[#1f2937] text-center tracking-wide">重命名标签</h3>
-                </div>
-                <div class="p-8"><input v-model="renameValue" type="text" placeholder="请输入新名称"
-                        class="w-full bg-[#f8fafc] border border-[#d1d5db] rounded-xl px-4 py-4 outline-none text-xl text-[#1f2937] text-center font-bold focus:border-[#10b981] transition-all">
-                </div>
-                <div class="px-6 py-5 bg-[#f9fafb] border-t border-[#e5e7eb] grid grid-cols-2 gap-4">
-                    <button @click="showRenameModal = false"
-                        class="w-full py-3 rounded-xl bg-[#e2e8f0] text-[#4b5563] font-bold border-none cursor-pointer">取消</button>
-                    <button @click="confirmRename" :disabled="store.isLoading"
-                        class="w-full py-3 rounded-xl bg-[#10b981] text-white font-bold hover:bg-[#059669] border-none cursor-pointer">确认修改</button>
-                </div>
-            </div>
-        </div>
+        <template v-if="store.savedLabels.length > 0 && store.savedLabels.length % 10 !== 0">
+          <div v-for="i in (10 - (store.savedLabels.length % 10))" :key="'ghost-'+i" class="invisible pointer-events-none flex flex-col shrink-0">
+            <div class="w-full aspect-square bg-transparent"></div>
+            <div class="p-4 border-t border-transparent"><div class="text-[14px]">&nbsp;</div></div>
+          </div>
+        </template>
 
-        <div v-if="showDeleteModal"
-            class="fixed inset-0 bg-[#00000099] flex items-center justify-center z-[2000] backdrop-blur-sm px-4">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[360px] overflow-hidden flex flex-col text-center">
-                <div class="p-8">
-                    <h3 class="text-xl font-extrabold text-[#1f2937] mb-2">永久删除标签？</h3>
-                    <p class="text-sm text-[#6b7280] font-medium">删除后数据将无法恢复，请谨慎操作。</p>
-                </div>
-                <div class="px-6 py-5 bg-[#f9fafb] border-t border-[#e5e7eb] grid grid-cols-2 gap-4">
-                    <button @click="showDeleteModal = false"
-                        class="w-full py-3 rounded-xl bg-[#e2e8f0] text-[#4b5563] font-bold border-none cursor-pointer">取消</button>
-                    <button @click="confirmDeleteLabel"
-                        class="w-full py-3 rounded-xl bg-[#ff4d4f] text-white font-bold border-none cursor-pointer">确认删除</button>
-                </div>
-            </div>
-        </div>
+      </div>
 
-        <div v-if="showImportShareModal"
-            class="fixed inset-0 bg-[#00000099] flex items-center justify-center z-[2000] backdrop-blur-sm px-4">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[400px] overflow-hidden flex flex-col">
-                <div class="px-6 py-5 bg-[#f0f9ff] border-b border-[#bae6fd]">
-                    <h3 class="font-extrabold text-[17px] text-[#0284c7] text-center tracking-wide">获取分享的模板</h3>
-                </div>
-                <div class="p-8"><input v-model="inputShareCode" type="text" placeholder="请输入6位分享码" maxlength="6"
-                        class="w-full bg-[#f8fafc] border border-[#d1d5db] rounded-xl px-4 py-4 outline-none text-xl text-[#1f2937] text-center font-bold focus:border-[#0ea5e9] uppercase transition-all">
-                </div>
-                <div class="px-6 py-5 bg-[#f9fafb] border-t border-[#e5e7eb] grid grid-cols-2 gap-4">
-                    <button @click="showImportShareModal = false"
-                        class="w-full py-3 rounded-xl bg-[#e2e8f0] text-[#4b5563] font-bold border-none cursor-pointer">取消</button>
-                    <button @click="confirmImportShare" :disabled="store.isLoading"
-                        class="w-full py-3 rounded-xl bg-[#0ea5e9] text-white font-bold hover:bg-[#0284c7] border-none cursor-pointer transition-colors">确认获取</button>
-                </div>
-            </div>
+      <div ref="loadMoreRef" class="w-full py-6 flex justify-center items-center shrink-0">
+        <div v-if="isLoadingMore" class="flex items-center gap-2 text-slate-400 text-[13px] font-bold">
+          <div class="w-4 h-4 border-2 border-slate-300 border-t-primary-500 rounded-full animate-spin"></div>
+          正在加载更多...
         </div>
+        <div v-else-if="currentPage >= totalPages && store.savedLabels.length > 0" class="text-slate-300 text-[12px] font-bold flex items-center gap-3">
+          <div class="w-16 h-px bg-slate-200"></div>全部加载完毕<div class="w-16 h-px bg-slate-200"></div>
+        </div>
+      </div>
 
-        <div v-if="showShareResultModal"
-            class="fixed inset-0 bg-[#00000099] flex items-center justify-center z-[2000] backdrop-blur-sm px-4">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-[400px] overflow-hidden flex flex-col text-center">
-                <div class="p-8">
-                    <div
-                        class="w-16 h-16 bg-[#d1fae5] text-[#10b981] rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor"
-                            stroke-width="3">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-extrabold text-[#1f2937] mb-2">生成分享码成功</h3>
-                    <p class="text-sm text-[#6b7280] font-medium mb-6">您的朋友可以通过此分享码获取该模板</p>
-                    <div
-                        class="bg-[#f8fafc] border-2 border-dashed border-[#cbd5e1] rounded-xl py-4 text-3xl font-black text-[#1677ff] tracking-[0.2em] mb-2 select-all">
-                        {{ displayShareCode }}</div>
-                </div>
-                <div class="px-6 py-5 bg-[#f9fafb] border-t border-[#e5e7eb] grid grid-cols-2 gap-4">
-                    <button @click="showShareResultModal = false"
-                        class="w-full py-3 rounded-xl bg-[#e2e8f0] text-[#4b5563] font-bold border-none cursor-pointer">关闭</button>
-                    <button @click="copyShareCode"
-                        class="w-full py-3 rounded-xl bg-[#1677ff] text-white font-bold hover:bg-[#1055c0] border-none cursor-pointer transition-colors">复制分享码</button>
-                </div>
-            </div>
+      <div class="mt-4 shrink-0 pb-12 px-2">
+        <div class="flex items-center mb-5">
+          <h2 class="text-xl font-black text-slate-900 tracking-wide flex items-center gap-3">
+            推荐模板库
+            <span class="text-[11px] font-extrabold text-success bg-success-bg border border-success/20 px-3 py-1 rounded-full tracking-widest uppercase shadow-sm">Coming Soon</span>
+          </h2>
         </div>
+        <div class="w-full h-[180px] flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-[24px] bg-slate-50/50 hover:bg-white hover:border-primary-300 transition-all duration-500 group cursor-not-allowed">
+          <div class="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4 border border-slate-100 group-hover:scale-110 group-hover:shadow-md transition-all duration-500">
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-300 group-hover:text-primary-400 transition-colors"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"></path><line x1="16" y1="8" x2="2" y2="22"></line><line x1="17.5" y1="15" x2="9" y2="6.5"></line></svg>
+          </div>
+          <span class="text-slate-400 font-bold tracking-widest text-[14px] group-hover:text-primary-600 transition-colors">海量精美云端模板即将上线，助力快速排版...</span>
+        </div>
+      </div>
 
     </div>
+
+    <transition name="modal">
+      <div v-if="showUnbindModal" class="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-[2000] backdrop-blur-sm px-4">
+        <div class="bg-white rounded-[24px] shadow-2xl w-full max-w-[380px] overflow-hidden flex flex-col text-center border border-white/50">
+          <div class="p-8 pt-10">
+            <div class="w-16 h-16 bg-danger-bg text-danger rounded-full flex items-center justify-center mx-auto mb-5">
+              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path><line x1="4" y1="4" x2="20" y2="20"></line></svg>
+            </div>
+            <h3 class="text-xl font-extrabold text-slate-900 mb-2">确认解除设备绑定？</h3>
+            <p class="text-sm text-slate-500 font-medium leading-relaxed">解绑后本设备将失去且清除本地数据，请慎重操作。</p>
+          </div>
+          <div class="px-6 py-5 bg-slate-50/50 border-t border-slate-100 grid grid-cols-2 gap-4">
+            <button @click="showUnbindModal = false" class="btn btn-subtle py-3.5 rounded-xl text-[15px]">取消保留</button>
+            <button @click="confirmUnbindDevice" class="btn btn-danger py-3.5 rounded-xl text-[15px]">确认解绑</button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <transition name="modal"><div v-if="showRenameModal" class="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-[2000] backdrop-blur-sm px-4"><div class="bg-white rounded-[24px] shadow-2xl w-full max-w-[400px] overflow-hidden flex flex-col"><div class="px-8 py-6 bg-slate-50/50 border-b border-slate-100"><h3 class="font-extrabold text-[18px] text-slate-900 text-center">重命名标签</h3></div><div class="p-8"><input v-model="renameValue" type="text" class="input-field w-full text-center text-xl font-bold py-4 rounded-2xl bg-slate-50"></div><div class="px-6 py-5 bg-slate-50/50 border-t border-slate-100 grid grid-cols-2 gap-4"><button @click="showRenameModal = false" class="btn btn-subtle py-3.5 rounded-xl">取消</button><button @click="confirmRename" class="btn btn-primary py-3.5 rounded-xl">确认修改</button></div></div></div></transition>
+    <transition name="modal"><div v-if="showDeleteModal" class="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-[2000] backdrop-blur-sm px-4"><div class="bg-white rounded-[24px] shadow-2xl w-full max-w-[360px] overflow-hidden flex flex-col text-center"><div class="p-8 pt-10"><div class="w-16 h-16 bg-danger-bg text-danger rounded-full flex items-center justify-center mx-auto mb-5"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div><h3 class="text-xl font-extrabold text-slate-900 mb-2">确认永久删除？</h3><p class="text-sm text-slate-500 font-medium">删除后云端及本地数据将彻底清除。</p></div><div class="px-6 py-5 bg-slate-50/50 border-t border-slate-100 grid grid-cols-2 gap-4"><button @click="showDeleteModal = false" class="btn btn-subtle py-3.5 rounded-xl">取消</button><button @click="confirmDeleteLabel" class="btn btn-danger py-3.5 rounded-xl">确认删除</button></div></div></div></transition>
+    <transition name="modal"><div v-if="showImportShareModal" class="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-[2000] backdrop-blur-sm px-4"><div class="bg-white rounded-[24px] shadow-2xl w-full max-w-[400px] overflow-hidden flex flex-col"><div class="px-8 py-6 bg-primary-50/50 border-b border-primary-100/50"><h3 class="font-extrabold text-[18px] text-primary-600 text-center">提取分享模板</h3></div><div class="p-8"><input v-model="inputShareCode" type="text" placeholder="输入 6 位分享码" maxlength="6" class="input-field w-full text-center text-2xl font-black uppercase tracking-[0.2em] py-4 rounded-2xl bg-slate-50 text-primary-600"></div><div class="px-6 py-5 bg-slate-50/50 border-t border-slate-100 grid grid-cols-2 gap-4"><button @click="showImportShareModal = false" class="btn btn-subtle py-3.5 rounded-xl">取消</button><button @click="confirmImportShare" class="btn btn-primary py-3.5 rounded-xl">确认获取</button></div></div></div></transition>
+    <transition name="modal"><div v-if="showShareResultModal" class="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-[2000] backdrop-blur-sm px-4"><div class="bg-white rounded-[24px] shadow-2xl w-full max-w-[400px] overflow-hidden flex flex-col text-center"><div class="p-8 pt-10"><div class="w-16 h-16 bg-success-bg text-success rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div><h3 class="text-xl font-extrabold text-slate-900 mb-2">云端分享成功</h3><p class="text-sm text-slate-500 font-medium mb-6">您的朋友可以通过此分享码获取该模板</p><div class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl py-5 text-4xl font-black text-primary-600 tracking-[0.25em] mb-2 select-all cursor-copy" @click="copyShareCode">{{ displayShareCode }}</div></div><div class="px-6 py-5 bg-slate-50/50 border-t border-slate-100 grid grid-cols-2 gap-4"><button @click="showShareResultModal = false" class="btn btn-subtle py-3.5 rounded-xl">关闭</button><button @click="copyShareCode" class="btn btn-primary py-3.5 rounded-xl">复制分享码</button></div></div></div></transition>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useMainStore } from '../store/useMainStore';
-import { clearLocalCache, getAllLabels, saveLabel, deleteLabel, clearAndImportDB } from '../utils/db';
+import { apiUnbindLicense, apiPost, apiGet, clearLocalCache, saveLabel, deleteLabel, clearAndImportDB } from '../utils/db'; // 引入新的直连方法
 import type { LabelData } from '../types';
-import { apiClient } from '../api';
 import LabelThumbnail from '../components/LabelThumbnail.vue';
 
 const store = useMainStore();
-
-// ==========================================
-// 分页状态
-// ==========================================
 const currentPage = ref(1);
-const totalPages = computed(() => Math.ceil(store.totalLabels / 15) || 1);
+const totalPages = computed(() => Math.ceil(store.totalLabels / 10) || 1); // 🌟 每页 10 条
+
+// 🌟 无感懒加载逻辑
+const loadMoreRef = ref<HTMLElement | null>(null);
+const isLoadingMore = ref(false);
+let observer: IntersectionObserver | null = null;
 
 onMounted(async () => {
     if (store.currentView === 'dashboard' && store.savedLabels.length === 0) {
-        await store.fetchLabels(1, 15);
+        await store.fetchLabels(1, 10);
     }
+
+    // 监听底部元素，实现无缝翻页
+    observer = new IntersectionObserver(async (entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore.value && !store.isLoading && currentPage.value < totalPages.value) {
+            isLoadingMore.value = true;
+            currentPage.value++;
+            await store.fetchLabels(currentPage.value, 15, true); // true 代表 append 追加模式
+            isLoadingMore.value = false;
+        }
+    }, { threshold: 0.1 });
+
+    if (loadMoreRef.value) observer.observe(loadMoreRef.value);
 });
 
-async function refreshPage() {
-    await store.fetchLabels(1, 15);
-    (window as any).showToast('数据已同步', 'success');
+onUnmounted(() => {
+    if (observer) observer.disconnect();
+});
+
+async function refreshPage() { 
+    currentPage.value = 1;
+    await store.fetchLabels(1, 10); // 🌟 每页 10 条
+    (window as any).showToast('数据已同步', 'success'); 
 }
 
-async function changePage(page: number) {
-    if (page < 1 || page > totalPages.value) return;
-    currentPage.value = page;
-    await store.fetchLabels(page, 15);
-}
-
-// ==========================================
-// 编辑与增删改
-// ==========================================
-function openEditor(label: LabelData) {
-    store.currentLabel = JSON.parse(JSON.stringify(label));
-    store.setView('editor');
-}
-
-function openNewEditor() {
-    store.currentLabel = { id: Date.now().toString(), name: '新建标签', wMM: 100, hMM: 100, elements: [] };
-    store.setView('editor');
-}
+function openEditor(label: LabelData) { store.currentLabel = JSON.parse(JSON.stringify(label)); store.setView('editor'); }
+function openNewEditor() { store.currentLabel = { id: Date.now().toString(), name: '新建标签', wMM: 100, hMM: 100, elements: [] }; store.setView('editor'); }
 
 const showRenameModal = ref(false);
 const renameValue = ref('');
@@ -310,169 +176,116 @@ const activeLabel = ref<LabelData | null>(null);
 const showDeleteModal = ref(false);
 const deleteTargetId = ref('');
 
-function triggerRenameModal(label: LabelData) {
-    activeLabel.value = label; renameValue.value = label.name; showRenameModal.value = true;
-}
-function triggerDeleteModal(id: string) {
-    deleteTargetId.value = id; showDeleteModal.value = true;
-}
+function triggerRenameModal(label: LabelData) { activeLabel.value = label; renameValue.value = label.name; showRenameModal.value = true; }
+function triggerDeleteModal(id: string) { deleteTargetId.value = id; showDeleteModal.value = true; }
 
 async function confirmRename() {
-    if (!renameValue.value.trim() || !activeLabel.value) return (window as any).showToast('请输入有效名称', 'warning');
-    const isDuplicate = store.savedLabels.some(l => l.name === renameValue.value.trim() && l.id !== activeLabel.value!.id);
-    if (isDuplicate) return (window as any).showToast('该模板名称已存在', 'warning');
-
+    if (!renameValue.value.trim() || !activeLabel.value) return;
     store.showLoading('正在重命名...');
     try {
-        const rawLabel = JSON.parse(JSON.stringify(activeLabel.value));
-        rawLabel.name = renameValue.value.trim();
-        await saveLabel(rawLabel);
-        await store.fetchLabels(currentPage.value, 15);
-        showRenameModal.value = false;
-        (window as any).showToast('重命名成功', 'success');
+        const rawLabel = JSON.parse(JSON.stringify(activeLabel.value)); rawLabel.name = renameValue.value.trim();
+        await saveLabel(rawLabel); 
+        await refreshPage(); // 刷新强制从本地/云端重拉
+        showRenameModal.value = false; (window as any).showToast('重命名成功', 'success');
     } catch (e: any) { (window as any).showToast(e.message, 'error'); } finally { store.hideLoading(); }
 }
 
 async function confirmDeleteLabel() {
     store.showLoading('正在删除...');
     try {
-        await deleteLabel(deleteTargetId.value);
-        await store.fetchLabels(currentPage.value, 15);
-        showDeleteModal.value = false;
-        (window as any).showToast('已永久删除', 'success');
+        await deleteLabel(deleteTargetId.value); 
+        await refreshPage();
+        showDeleteModal.value = false; (window as any).showToast('已永久删除', 'success');
     } catch (e: any) { (window as any).showToast(e.message, 'error'); } finally { store.hideLoading(); }
 }
 
-// ==========================================
-// 🌟 分享与提取功能 (Mock API，接入后端时替换)
-// ==========================================
+const showUnbindModal = ref(false);
+
+// 🌟 解绑逻辑
+async function confirmUnbindDevice() {
+    store.showLoading('正在向云端申请解绑...');
+    showUnbindModal.value = false;
+    try {
+        const key = localStorage.getItem('easy_label_vip_key');
+        if (!key) throw new Error('本地未找到授权卡密');
+        const res = await apiUnbindLicense(key); // 用新方法
+        if (res.success) {
+            await clearLocalCache();
+            localStorage.removeItem('easy_label_vip_key'); 
+            store.savedLabels = [];
+            store.setView('login');
+            (window as any).showToast(res.message || '解绑成功，已退出', 'success');
+        } else throw new Error(res.error || '解绑失败');
+    } catch (err: any) { (window as any).showToast(err.message, 'error'); } finally { store.hideLoading(); }
+}
+
 const showImportShareModal = ref(false);
 const inputShareCode = ref('');
 const showShareResultModal = ref(false);
 const displayShareCode = ref('');
 
-// 1. 生成分享码 (POST 请求)
+// 🌟 分享代码获取
 async function uploadLabelToCloud(label: LabelData) {
     store.showLoading('生成分享码中...');
     try {
-        // 彻底洗白 Proxy，提取纯净的 JSON 数据发给后端
-        const rawLabel = JSON.parse(JSON.stringify(label));
-
-        // 发送 POST 请求到后端
-        const res: any = await apiClient.post('/api/share', rawLabel);
-
-        if (!res.success) {
-            throw new Error(res.error || '生成分享码失败');
-        }
-
-        displayShareCode.value = res.shareCode;
-        showShareResultModal.value = true;
-        (window as any).showToast('云端分享成功', 'success');
-    } catch (e: any) {
-        (window as any).showToast(e.message || '分享失败，请检查网络', 'error');
-    } finally {
-        store.hideLoading();
-    }
+        // 直接在前端走 apiPost，网络面板可见
+        const res: any = await apiPost('/api/share', JSON.parse(JSON.stringify(label)));
+        if (!res.success) throw new Error(res.error || '生成失败');
+        displayShareCode.value = res.shareCode; showShareResultModal.value = true;
+    } catch (e: any) { (window as any).showToast(e.message, 'error'); } finally { store.hideLoading(); }
 }
 
-// 2. 复制分享码
-function copyShareCode() {
-    navigator.clipboard.writeText(displayShareCode.value);
-    (window as any).showToast('分享码已复制到剪贴板', 'success');
-}
+function copyShareCode() { navigator.clipboard.writeText(displayShareCode.value); (window as any).showToast('已复制', 'success'); }
 
-// 3. 提取分享码 (GET 请求)
 async function confirmImportShare() {
     const code = inputShareCode.value.trim().toUpperCase();
-    if (!code || code.length !== 6) {
-        return (window as any).showToast('请输入有效的 6 位分享码', 'warning');
-    }
-
-    store.showLoading('正在获取云端模板...');
+    if (!code || code.length !== 6) return (window as any).showToast('请输入 6 位分享码', 'warning');
+    store.showLoading('正在获取...');
     try {
-        // 发起 GET 请求 (使用相对路径，Vite/Nginx 代理会自动转发到后端)
-        const response = await fetch(`/api/share/${code}`);
-        const res = await response.json();
-
-        if (!response.ok || !res.success) {
-            throw new Error(res.error || '获取失败，分享码无效或已过期');
-        }
-
+        // 前端直连获取分享内容
+        const res: any = await apiGet(`/api/share/${code}`);
+        if (!res.success) throw new Error(res.error || '过期或无效');
+        
         const sharedLabel = res.labelData;
-
-        // 🌟 核心防冲突机制：给别人分享来的模板赋予一个新的独立 ID！
-        // 避免和本地原有的模板 ID 冲突导致覆盖，同时加上后缀方便区分
         sharedLabel.id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
         sharedLabel.name = sharedLabel.name + ' (分享导入)';
-
-        // 调用现成的 db 方法存入个人数据库
-        await saveLabel(sharedLabel);
-
-        (window as any).showToast('获取成功，已存入您的标签库', 'success');
-        showImportShareModal.value = false;
-        inputShareCode.value = '';
-
-        // 刷新列表以展示最新获取的模板
-        await store.fetchLabels(1, 15);
-    } catch (e: any) {
-        (window as any).showToast(e.message || '获取失败，请检查分享码是否正确', 'error');
-    } finally {
-        store.hideLoading();
-    }
+        await saveLabel(sharedLabel); 
+        
+        showImportShareModal.value = false; inputShareCode.value = '';
+        await refreshPage();
+        (window as any).showToast('获取成功', 'success');
+    } catch (e: any) { (window as any).showToast(e.message, 'error'); } finally { store.hideLoading(); }
 }
 
-// ==========================================
-// 本地 JSON 导入导出
-// ==========================================
 const jsonInputRef = ref<HTMLInputElement | null>(null);
-
 function exportJsonLibrary() {
-    if (store.savedLabels.length === 0) return (window as any).showToast('当前模板库为空，无法导出', 'warning');
-    const dataStr = JSON.stringify(store.savedLabels, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a'); link.href = url;
+    const dataStr = JSON.stringify(store.savedLabels, null, 2); const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url;
     link.download = `易标签_本地备份_${new Date().toLocaleDateString().replace(/\//g, '')}.json`;
     link.click(); URL.revokeObjectURL(url);
-    (window as any).showToast('本地库导出成功', 'success');
 }
-
 function triggerJsonImport() { jsonInputRef.value?.click(); }
-
 function handleJsonImport(e: Event) {
-    const input = e.target as HTMLInputElement; const file = input.files?.[0]; if (!file) return;
+    const file = (e.target as HTMLInputElement).files?.[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = async (ev) => {
         try {
             const data = JSON.parse(ev.target?.result as string);
-            if (!Array.isArray(data)) throw new Error('JSON 格式错误');
-            store.showLoading('正在解析并导入本地库...');
-            await clearAndImportDB(data);
-            await store.fetchLabels(1, 15);
-            (window as any).showToast('本地库导入成功！', 'success');
-        } catch (err) { (window as any).showToast('文件解析失败', 'error'); } finally { store.hideLoading(); if (jsonInputRef.value) jsonInputRef.value.value = ''; }
-    };
-    reader.readAsText(file);
+            store.showLoading('导入中...'); await clearAndImportDB(data); await refreshPage();
+        } catch (err) {} finally { store.hideLoading(); if (jsonInputRef.value) jsonInputRef.value.value = ''; }
+    }; reader.readAsText(file);
 }
 </script>
 
 <style scoped>
 @reference "tailwindcss";
 
-.btn {
-    @apply flex items-center justify-center gap-1.5 border-none rounded-lg cursor-pointer font-bold transition-all whitespace-nowrap;
-}
+.modal-enter-active, .modal-leave-active { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+.modal-enter-from, .modal-leave-to { opacity: 0; transform: scale(0.95); }
 
-.btn-outline {
-    @apply bg-[#f9fafb] border border-[#e5e7eb] text-[#4b5563] hover:border-[#1677ff] hover:text-[#1677ff] hover:bg-[#eff6ff] px-4 py-2.5 text-[13px] shadow-sm;
+.tooltip-trigger .tooltip-text {
+  @apply absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[11px] font-bold px-2.5 py-1 rounded-md shadow-lg opacity-0 transition-all pointer-events-none whitespace-nowrap;
 }
-
-/* 🌟 卡片操作按钮加入极致微动效：Hover 变大一点，按下缩小一点 */
-.card-action-btn {
-    @apply flex-1 py-2 bg-[#f1f5f9] text-[#6b7280] rounded-lg transition-all duration-200 flex justify-center items-center border-none cursor-pointer transform hover:scale-110 active:scale-95;
-}
-
-.page-btn {
-    @apply px-4 py-2 rounded-lg bg-white border border-[#e5e7eb] text-[#4b5563] hover:bg-[#eff6ff] hover:text-[#1677ff] disabled:opacity-40 transition-all font-bold text-[13px] shadow-sm border-none cursor-pointer;
-}
+.tooltip-trigger:hover .tooltip-text { @apply opacity-100 -translate-y-1; }
+.tooltip-trigger .tooltip-text::after { content: ''; @apply absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-900; }
 </style>
