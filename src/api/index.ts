@@ -1,11 +1,11 @@
 import axios from 'axios';
 import type { LabelData } from '../types';
 
-const BASE_URL = 'https://easylabel.cloud'; 
+const BASE_URL = 'https://easylabel.cloud';
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 10000, 
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   }

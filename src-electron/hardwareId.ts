@@ -59,7 +59,7 @@ function getMacAddress(): string {
  */
 export function generateHardDeviceId(): string {
   let hardwareId = getSystemUUID();
-  
+
   // 如果当前系统权限不足导致拿不到主板 UUID，则用 Mac地址 + 计算机名 作为备用唯一指纹
   if (!hardwareId || hardwareId.includes('ffffffff')) {
     hardwareId = getMacAddress() + '_' + os.hostname();

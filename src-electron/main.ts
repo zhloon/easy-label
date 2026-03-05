@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import axios from 'axios'; // 🌟 引入 axios
-import { generateHardDeviceId } from './hardwareId'; 
+import { generateHardDeviceId } from './hardwareId';
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = 'true';
 let mainWindow: BrowserWindow | null = null;
@@ -31,9 +31,9 @@ apiClient.interceptors.response.use(
   (error) => {
     console.error('❌ [Main API Error]:', error.message);
     // 🌟 核心：直接 resolve 错误对象给前端 IPC，防止底层直接抛红字奔溃
-    return Promise.resolve({ 
-      success: false, 
-      error: error.response?.data?.error || '网络连接失败，请检查网络并重试' 
+    return Promise.resolve({
+      success: false,
+      error: error.response?.data?.error || '网络连接失败，请检查网络并重试'
     });
   }
 );

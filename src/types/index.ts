@@ -16,6 +16,9 @@ export interface LabelElement {
   imgUrl?: string;
   originalUrl?: string;
   isVertical?: 'true' | 'false';
+  // 🌟 新增以下两行：用于记忆条码的自定义物理尺寸
+  customW?: number; 
+  customH?: number;
 }
 
 export interface LabelData {

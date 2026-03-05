@@ -1,7 +1,7 @@
 import { ipcRenderer } from 'electron';
 import localforage from 'localforage';
 import type { LabelData } from '../types';
-import { apiClient } from '../api'; 
+import { apiClient } from '../api';
 
 const CACHE_KEY = 'easy_label_cached_data';
 
@@ -11,46 +11,45 @@ async function getAuthPayload() {
   return { key, deviceId };
 }
 
-// 清理缓存方法
+// 手动刷新或解绑时才调用此方法
 export async function clearLocalCache(): Promise<void> {
   await localforage.removeItem(CACHE_KEY);
 }
 
 /**
- * 查：优先从本地读取，本地没有则从云端验证、拉取并缓存到本地
+ * 查：只有本地完全没数据时，才向云端发起全量拉取请求 (极低消耗)
  */
-export async function getAllLabels(page: number = 1, pageSize: number = 15): Promise<{labels: LabelData[], total: number}> {
+export async function getAllLabels(page: number = 1, pageSize: number = 15): Promise<{ labels: LabelData[], total: number }> {
   try {
     const auth = await getAuthPayload();
     if (!auth.key) return { labels: [], total: 0 };
 
     let localData: LabelData[] | null = await localforage.getItem(CACHE_KEY);
 
+    // 只有初次登录、或用户主动点击“刷新”清理了缓存后，才会真正请求云端
     if (!localData || localData.length === 0) {
-      console.log('🔄 缓存为空 (或被强制清理)，正在从云端拉取最新数据...');
-      
-      const data: any = await apiClient.post('/api/labels/get', { 
-        ...auth, 
-        page: 1, 
-        pageSize: 9999 
+      console.log('🔄 本地无缓存，正在从云端拉取全量数据...');
+
+      const data: any = await apiClient.post('/api/labels/get', {
+        ...auth,
+        page: 1,
+        pageSize: 9999
       });
-      
+
       if (data.success && data.labels) {
         localData = data.labels;
         await localforage.setItem(CACHE_KEY, localData);
-        console.log(`✅ 云端同步完成，成功缓存 ${localData!.length} 条数据`);
       } else {
         return { labels: [], total: 0 };
       }
-    } else {
-      console.log('⚡ 命中本地缓存，数据极速加载');
     }
 
+    // 纯本地内存分页，零延迟，零服务器请求
     const total = localData!.length;
     const startIndex = (page - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     const paginatedLabels = localData!.slice(startIndex, endIndex);
-    
+
     return { labels: paginatedLabels, total };
   } catch (err) {
     console.error('获取标签失败:', err);
@@ -59,56 +58,68 @@ export async function getAllLabels(page: number = 1, pageSize: number = 15): Pro
 }
 
 /**
- * 增/改：保存到云端成功后，直接销毁本地缓存，强制触发云端重拉
+ * 增/改：精确增量更新！保存一条，只修改本地的那一条
  */
 export async function saveLabel(label: LabelData): Promise<void> {
   try {
     const auth = await getAuthPayload();
-    console.log(`👉 正在请求云端保存标签: [${label.name}]`);
 
-    const data: any = await apiClient.post('/api/labels/save', { 
-      ...auth, 
-      label 
+    // 1. 发送给云端处理 (以云端为准)
+    const data: any = await apiClient.post('/api/labels/save', {
+      ...auth,
+      label
     });
-    
+
     if (!data.success) {
       throw new Error(data.error || '云端保存失败');
     }
 
-    // 🌟 核心修改：保存成功后，立即销毁缓存
-    console.log('🗑️ 保存成功，销毁本地缓存以备重拉...');
-    await clearLocalCache();
+    // 🌟 2. 核心优化：云端保存成功后，我们不去销毁缓存，而是直接把本地缓存翻出来“精准手术”
+    let localData: LabelData[] | null = await localforage.getItem(CACHE_KEY);
+    if (!localData) localData = [];
+
+    const index = localData.findIndex(l => l.id === label.id);
+    if (index > -1) {
+      // 找到了，说明是修改，直接覆盖这一条
+      localData[index] = label;
+    } else {
+      // 没找到，说明是新增，插到最前面
+      localData.unshift(label);
+    }
+
+    // 将做完手术的数据重新存回本地。整个过程对服务器读取请求为 0！
+    await localforage.setItem(CACHE_KEY, localData);
 
   } catch (err: any) {
-    console.error('❌ saveLabel 底层捕获到异常:', err.message);
-    throw err; 
+    throw err;
   }
 }
 
 /**
- * 删：从云端删除成功后，直接销毁本地缓存，强制触发云端重拉
+ * 删：精确增量更新！删除一条，只在本地剔除那一条
  */
 export async function deleteLabel(id: string): Promise<void> {
   const auth = await getAuthPayload();
-  
-  const data: any = await apiClient.post('/api/labels/delete', { 
-    ...auth, 
-    labelId: id 
+
+  // 1. 发送给云端执行删除
+  const data: any = await apiClient.post('/api/labels/delete', {
+    ...auth,
+    labelId: id
   });
-  
+
   if (!data.success) throw new Error(data.error || '云端删除失败');
 
-  // 🌟 核心修改：删除成功后，立即销毁缓存
-  console.log('🗑️ 删除成功，销毁本地缓存以备重拉...');
-  await clearLocalCache();
+  // 🌟 2. 核心优化：云端删除成功后，直接从本地数组中过滤掉它
+  let localData: LabelData[] | null = await localforage.getItem(CACHE_KEY);
+  if (localData) {
+    localData = localData.filter(l => l.id !== id);
+    await localforage.setItem(CACHE_KEY, localData);
+  }
 }
 
-/**
- * 批量导入：上传本地 JSON 数据到云端
- */
 export async function clearAndImportDB(data: LabelData[]): Promise<void> {
   for (const item of data) {
     if (!item.id) item.id = Date.now().toString() + Math.random().toString(36).substring(2, 5);
-    await saveLabel(item); 
+    await saveLabel(item);
   }
 }
