@@ -257,7 +257,13 @@ async function fetchPlatformList(platform: string, auth: AuthResult, progressCal
 
           if (detailRes.data?.code === 0 || detailRes.data?.data) {
             const converter = platform === 'shuaishou' ? convertShuaishouData : convertJiatongData;
-            results.push(converter(detailRes.data.data || detailRes.data, platName));
+            const converted = converter(detailRes.data.data || detailRes.data, platName);
+            console.log(`✅ [Migration] 转换数据:`, {
+              platform: platName,
+              original: detailRes.data.data || detailRes.data,
+              converted: converted
+            });
+            results.push(converted);
           }
         } catch (e) {
           console.error(`迁移 ${platName} 失败:`, e);
