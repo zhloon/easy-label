@@ -120,15 +120,18 @@ ipcMain.handle('migrate-labels', async (event, platform: string, storedAuth?: an
     const migrateWin = createMigrationWindow(platform);
     const targetUrl = platform === 'shuaishou' ? 'https://dztool.shuaishou.com/' : 'https://jiatongkuajing.com/';
     
-    migrateWin.loadURL(targetUrl);
+    let isLoaded = false;
     
     migrateWin.webContents.on('did-finish-load', () => {
-      console.log(`✅ [Migration] 窗口加载完成，开始检查登录状态...`);
+      console.log(`✅ [Migration] 窗口加载完成`);
+      isLoaded = true;
     });
     
     migrateWin.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
       console.error(`❌ [Migration] 窗口加载失败: ${errorDescription} (${errorCode})`);
     });
+    
+    migrateWin.loadURL(targetUrl);
 
     let pollInterval: NodeJS.Timeout;
     let hasStartedMigration = false;
@@ -141,6 +144,11 @@ ipcMain.handle('migrate-labels', async (event, platform: string, storedAuth?: an
     pollInterval = setInterval(async () => {
       if (hasStartedMigration || migrateWin.isDestroyed()) {
         clearInterval(pollInterval);
+        return;
+      }
+      
+      if (!isLoaded) {
+        console.log(`⏳ [Migration] 等待窗口加载...`);
         return;
       }
       
