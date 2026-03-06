@@ -46,3 +46,12 @@ export interface ComponentCategory {
   parentTitle: string;
   groups: ComponentGroup[];
 }
+export interface LabelData {
+  id: string;
+  name: string;
+  wMM: number;
+  hMM: number;
+  elements: LabelElement[];
+  platform?: string; // 🌟 新增这一行（使用 ? 表示可选，兼容老数据）
+  // ... 其他你原有的属性
+}

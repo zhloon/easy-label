@@ -118,7 +118,7 @@ async function confirmUnbindDevice() {
   } catch (err: any) { (window as any).showToast(err.message, 'error'); } finally { store.hideLoading(); }
 }
 
-function openBuyLink() { shell.openExternal('https://easylabel.cloud/buy'); }
+function openBuyLink() { shell.openExternal('https://www.easylabel.cloud/'); }
 </script>
 
 <style scoped>

@@ -1,55 +1,60 @@
 import { defineStore } from 'pinia';
-import { getCloudLabels, getLocalThenCloudLabels } from '../utils/db';
+import { getLocalLabelsPaginated, getLocalThenCloudLabels } from '../utils/db';
 import type { LabelData } from '../types';
 
+interface MainState {
+  currentView: 'login' | 'dashboard' | 'editor';
+  savedLabels: LabelData[];
+  totalLabels: number;
+  currentLabel: LabelData;
+  isLoading: boolean;
+  loadingText: string;
+  currentPlatform: string; // <--- 加上这一行
+}
+
 export const useMainStore = defineStore('main', {
-  state: () => ({
-    currentView: 'login' as 'login' | 'dashboard' | 'editor',
-    savedLabels: [] as LabelData[],
+  // 2. 🌟 在这里给 currentPlatform 赋初始值 'ALL'
+  state: (): MainState => ({
+    currentView: 'login',
+    savedLabels: [],
     totalLabels: 0,
-    currentLabel: { id: '', name: '新建标签', wMM: 100, hMM: 100, elements: [] } as LabelData,
+    currentLabel: {} as LabelData,
     isLoading: false,
-    loadingText: '加载中...'
+    loadingText: '',
+    currentPlatform: 'TEMU', // <--- 加上这一行
   }),
   actions: {
-    setView(view: 'login' | 'dashboard' | 'editor') {
-      this.currentView = view;
-    },
-    showLoading(text = '加载中...') {
-      this.loadingText = text;
-      this.isLoading = true;
-    },
-    hideLoading() {
-      this.isLoading = false;
-    },
-    // 🌟 增加 preferLocal 参数，用于判断是否优先读取本地缓存
-    async fetchLabels(page = 1, pageSize = 10, append = false, preferLocal = false) {
-      if (!append) this.showLoading(preferLocal ? '正在读取本地数据...' : '正在同步数据...');
+      setView(view: 'login' | 'dashboard' | 'editor') {
+        this.currentView = view;
+      },
+      showLoading(text = '处理中...') {
+        this.isLoading = true;
+        this.loadingText = text;
+      },
+      hideLoading() {
+        this.isLoading = false;
+        this.loadingText = '';
+      },
+// 3. 🌟 修改 fetchLabels，让它每次都去读取当前的 currentPlatform
+    async fetchLabels(page = 1, pageSize = 10, forceLocal = false, skipLoading = false) {
+      if (!skipLoading) this.showLoading('加载中...');
       try {
-        // 根据参数决定是强制拉云端，还是优先拉本地
-        const data = preferLocal 
-            ? await getLocalThenCloudLabels(page, pageSize) 
-            : await getCloudLabels(page, pageSize);
-
-        if (append) {
-          // 懒加载：追加到底部
-          this.savedLabels.push(...data.labels);
+        const platform = this.currentPlatform; // 获取当前选中的平台
+        let res;
+        
+        // 调用 db.ts 时，把 platform 传进去！
+        if (forceLocal) {
+          res = await getLocalLabelsPaginated(page, pageSize, platform);
         } else {
-          // 刷新：直接覆盖
-          this.savedLabels = data.labels;
+          res = await getLocalThenCloudLabels(page, pageSize, platform);
         }
-        this.totalLabels = data.total;
-      } catch (e: any) {
-        console.error('Fetch labels error:', e);
-        if (e.message.includes('未绑定') || e.message.includes('失效') || e.message.includes('未授权')) {
-          localStorage.removeItem('easy_label_vip_key');
-          this.setView('login');
-          (window as any).showToast('登录授权已失效，请重新登录', 'error');
-        } else {
-          (window as any).showToast(e.message || '获取数据失败', 'error');
-        }
+        
+        this.savedLabels = res.labels || [];
+        this.totalLabels = res.total || 0;
+      } catch (err) {
+        console.error('获取标签失败', err);
       } finally {
-        if (!append) this.hideLoading();
+        if (!skipLoading) this.hideLoading();
       }
     }
   }

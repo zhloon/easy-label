@@ -1,6 +1,8 @@
 {
   "name": "easy-label-vue",
   "version": "2.0.0",
+  "description": "一款专业的跨境电商标签编辑与打印工具", 
+  "author": "Zhloon",
   "private": true,
   "main": "dist-electron/main.js",
   "scripts": {

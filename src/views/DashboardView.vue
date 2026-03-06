@@ -25,7 +25,7 @@
         <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm relative overflow-hidden">
           <div class="absolute top-0 right-0 w-16 h-16 bg-success/5 rounded-bl-full pointer-events-none"></div>
           <div class="text-[13px] font-extrabold text-slate-700 mb-1 flex items-center gap-1.5"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" class="text-success"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg> 本机已授权</div>
-          <div class="text-[11px] text-slate-400 font-medium mb-4">云端数据保护运行中</div>
+          <div class="text-[11px] text-slate-400 font-medium mb-4">云端保护运行中</div>
           <button @click="showUnbindModal = true" :disabled="store.isLoading" class="w-full flex items-center justify-center gap-1.5 py-2.5 bg-white border border-danger/20 text-danger hover:bg-danger hover:text-white rounded-xl text-[13px] font-bold transition-all shadow-sm">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg> 退出并解绑
           </button>
@@ -39,11 +39,18 @@
         <h2 class="text-[16px] font-extrabold text-slate-800 tracking-wide flex items-center gap-2">工作台 <span class="text-slate-300 font-normal">/</span> <span class="text-primary-600">标签管理</span></h2>
         
         <div class="flex items-center gap-2 sm:gap-3">
-          <button @click="refreshPage" :disabled="store.isLoading" class="btn text-slate-600 bg-white border border-slate-200 hover:border-primary-300 hover:text-primary-600 shadow-sm h-10 rounded-xl px-4 transition-colors"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>同步刷新</button>
+          <button @click="refreshPage" :disabled="store.isLoading" class="btn btn-subtle text-slate-500 hover:text-primary-600 px-4 h-10 rounded-xl bg-white border border-slate-200 shadow-sm"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>同步刷新</button>
+          
           <div class="w-px h-5 bg-slate-200 mx-1"></div>
-          <button @click="showImportShareModal = true" :disabled="store.isLoading" class="btn bg-indigo-50 text-indigo-600 border border-indigo-100 hover:bg-indigo-100 hover:border-indigo-200 shadow-sm h-10 rounded-xl px-4 transition-colors"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line><rect x="3" y="19" width="18" height="2" rx="1"></rect></svg>获取分享的模板</button>
-          <button @click="triggerJsonImport" :disabled="store.isLoading" class="btn bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100 hover:border-emerald-200 shadow-sm h-10 rounded-xl px-4 transition-colors"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>导入备份数据</button>
-          <button @click="exportJsonLibrary" :disabled="store.isLoading" class="btn bg-amber-50 text-amber-600 border border-amber-100 hover:bg-amber-100 hover:border-amber-200 shadow-sm h-10 rounded-xl px-4 transition-colors"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>导出备份数据</button>
+
+          <button @click="showMigrationModal = true" :disabled="store.isLoading" class="btn bg-indigo-50 text-indigo-600 border border-indigo-100 hover:bg-indigo-100 shadow-sm h-10 rounded-xl px-4 transition-colors">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" class="shrink-0"><polyline points="8 17 12 21 16 17"></polyline><line x1="12" y1="12" x2="12" y2="21"></line><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path></svg>
+            数据搬家
+          </button>
+
+          <button @click="showImportShareModal = true" :disabled="store.isLoading" class="btn text-primary-600 bg-primary-50 hover:bg-primary-100 border border-primary-100 shadow-sm h-10 rounded-xl px-4"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line><rect x="3" y="19" width="18" height="2" rx="1"></rect></svg>提取分享</button>
+          <button @click="triggerJsonImport" :disabled="store.isLoading" class="btn btn-outline bg-white border-slate-200 shadow-sm h-10 rounded-xl px-4"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>导入配置</button>
+          <button @click="exportJsonLibrary" :disabled="store.isLoading" class="btn btn-outline bg-white border-slate-200 shadow-sm h-10 rounded-xl px-4"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>导出备份</button>
           <input type="file" ref="jsonInputRef" accept=".json" class="hidden" @change="handleJsonImport" />
         </div>
       </header>
@@ -56,7 +63,24 @@
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>新建空白标签
           </button>
         </div>
-
+        <div class="mb-6 px-2 w-full">
+          <div class="flex items-center gap-1.5 p-1.5 bg-white border border-slate-200 rounded-2xl overflow-x-auto custom-scrollbar shadow-sm w-fit">
+            <button 
+              v-for="plat in platforms" 
+              :key="plat.id"
+              @click="switchPlatform(plat.id)"
+              class="relative flex items-center justify-center px-5 h-10 rounded-xl text-[13px] font-bold transition-all duration-300 z-10 shrink-0 select-none"
+              :class="store.currentPlatform === plat.id ? 'text-primary-600' : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'"
+            >
+               <div 
+                 v-if="store.currentPlatform === plat.id" 
+                 class="absolute inset-0 bg-primary-50 rounded-xl -z-10 shadow-[inset_0_1px_4px_rgba(22,119,255,0.1)] border border-primary-100/50"
+                 style="animation: fadeScale 0.2s cubic-bezier(0.16, 1, 0.3, 1);"
+               ></div>
+               {{ plat.name }}
+            </button>
+          </div>
+        </div>
         <div class="relative w-full shrink-0">
           <div class="grid grid-cols-2 md:grid-cols-5 gap-5 lg:gap-6 p-2">
             
@@ -99,29 +123,28 @@
           <button @click="changePage(currentPage + 1)" :disabled="currentPage >= totalPages" class="btn btn-outline text-[13px] px-4 py-2 rounded-full shadow-sm hover:-translate-y-0.5 disabled:opacity-50 disabled:hover:translate-y-0">下一页</button>
         </div>
 
-        <div class="mt-4 shrink-0 pb-12 px-2">
-          <div class="flex items-center mb-5">
-            <h2 class="text-xl font-black text-slate-900 tracking-wide flex items-center gap-3">
-              推荐模板库
-              <span class="text-[11px] font-extrabold text-success bg-success-bg border border-success/20 px-3 py-1 rounded-full tracking-widest uppercase shadow-sm">Coming Soon</span>
-            </h2>
-          </div>
-          <div class="w-full h-[180px] flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-[24px] bg-slate-50/50 hover:bg-white hover:border-primary-300 transition-all duration-500 group cursor-not-allowed">
-            <div class="w-16 h-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mb-4 border border-slate-100 group-hover:scale-110 group-hover:shadow-md transition-all duration-500">
-              <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" class="text-slate-300 group-hover:text-primary-400 transition-colors"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"></path><line x1="16" y1="8" x2="2" y2="22"></line><line x1="17.5" y1="15" x2="9" y2="6.5"></line></svg>
-            </div>
-            <span class="text-slate-400 font-bold tracking-widest text-[14px] group-hover:text-primary-600 transition-colors">海量精美云端模板即将上线，助力快速排版...</span>
-          </div>
-        </div>
-
       </div>
     </main>
 
     <transition name="modal">
-      <div v-if="showUnbindModal" class="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-[2000] backdrop-blur-sm px-4">
-        <div class="bg-white rounded-[24px] shadow-2xl w-full max-w-[380px] overflow-hidden flex flex-col text-center border border-white/50">
-          <div class="p-8 pt-10"><div class="w-16 h-16 bg-danger-bg text-danger rounded-full flex items-center justify-center mx-auto mb-5"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path><line x1="4" y1="4" x2="20" y2="20"></line></svg></div><h3 class="text-xl font-extrabold text-slate-900 mb-2">确认解除设备绑定？</h3><p class="text-sm text-slate-500 font-medium leading-relaxed">解绑后本设备将失去且清除本地数据，请慎重操作。</p></div>
-          <div class="px-6 py-5 bg-slate-50/50 border-t border-slate-100 grid grid-cols-2 gap-4"><button @click="showUnbindModal = false" class="btn btn-subtle py-3.5 rounded-xl text-[15px]">取消保留</button><button @click="confirmUnbindDevice" class="btn btn-danger py-3.5 rounded-xl text-[15px]">确认解绑</button></div>
+      <div v-if="showMigrationModal" class="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-[2000] backdrop-blur-sm px-4">
+        <div class="bg-white rounded-[24px] shadow-2xl w-full max-w-[400px] overflow-hidden flex flex-col text-center border border-white/50">
+          <div class="px-8 py-6 bg-indigo-50/50 border-b border-indigo-100/50">
+            <h3 class="font-extrabold text-[18px] text-indigo-600 text-center">选择数据来源</h3>
+          </div>
+          <div class="p-8 flex flex-col gap-4">
+            <button @click="startMigration('shuaishou')" class="btn bg-white border-2 border-slate-200 hover:border-indigo-500 hover:text-indigo-600 py-4 rounded-2xl text-[16px] font-bold transition-all shadow-sm flex items-center justify-center gap-2">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+              甩手工具
+            </button>
+            <button @click="startMigration('jiatong')" class="btn bg-white border-2 border-slate-200 hover:border-indigo-500 hover:text-indigo-600 py-4 rounded-2xl text-[16px] font-bold transition-all shadow-sm flex items-center justify-center gap-2">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+              佳同工具
+            </button>
+          </div>
+          <div class="px-6 py-5 bg-slate-50/50 border-t border-slate-100 grid grid-cols-1">
+            <button @click="showMigrationModal = false" class="btn btn-subtle py-3.5 rounded-xl text-[15px]">取消</button>
+          </div>
         </div>
       </div>
     </transition>
@@ -130,14 +153,55 @@
     <transition name="modal"><div v-if="showImportShareModal" class="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-[2000] backdrop-blur-sm px-4"><div class="bg-white rounded-[24px] shadow-2xl w-full max-w-[400px] overflow-hidden flex flex-col"><div class="px-8 py-6 bg-primary-50/50 border-b border-primary-100/50"><h3 class="font-extrabold text-[18px] text-primary-600 text-center">提取分享模板</h3></div><div class="p-8"><input v-model="inputShareCode" type="text" placeholder="输入 6 位分享码" maxlength="6" class="input-field w-full text-center text-2xl font-black uppercase tracking-[0.2em] py-4 rounded-2xl bg-slate-50 text-primary-600 focus:bg-white outline-none border border-transparent focus:border-primary-300"></div><div class="px-6 py-5 bg-slate-50/50 border-t border-slate-100 grid grid-cols-2 gap-4"><button @click="showImportShareModal = false" class="btn btn-subtle py-3.5 rounded-xl">取消</button><button @click="confirmImportShare" class="btn btn-primary py-3.5 rounded-xl">确认获取</button></div></div></div></transition>
     <transition name="modal"><div v-if="showShareResultModal" class="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-[2000] backdrop-blur-sm px-4"><div class="bg-white rounded-[24px] shadow-2xl w-full max-w-[400px] overflow-hidden flex flex-col text-center"><div class="p-8 pt-10"><div class="w-16 h-16 bg-success-bg text-success rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner"><svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div><h3 class="text-xl font-extrabold text-slate-900 mb-2">云端分享成功</h3><p class="text-sm text-slate-500 font-medium mb-6">您的朋友可以通过此分享码获取该模板</p><div class="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl py-5 text-4xl font-black text-primary-600 tracking-[0.25em] mb-2 select-all cursor-copy" @click="copyShareCode">{{ displayShareCode }}</div></div><div class="px-6 py-5 bg-slate-50/50 border-t border-slate-100 grid grid-cols-2 gap-4"><button @click="showShareResultModal = false" class="btn btn-subtle py-3.5 rounded-xl">关闭</button><button @click="copyShareCode" class="btn btn-primary py-3.5 rounded-xl">复制分享码</button></div></div></div></transition>
   </div>
+  <transition name="modal">
+    <div v-if="showUnbindModal" class="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-[2000] backdrop-blur-sm px-4">
+      <div class="bg-white rounded-[24px] shadow-2xl w-full max-w-[380px] overflow-hidden flex flex-col text-center border border-white/50">
+        <div class="p-8 pt-10">
+          <div class="w-16 h-16 bg-danger-bg text-danger rounded-full flex items-center justify-center mx-auto mb-5">
+            <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path><line x1="4" y1="4" x2="20" y2="20"></line></svg>
+          </div>
+          <h3 class="text-xl font-extrabold text-slate-900 mb-2">确认解除设备绑定？</h3>
+          <p class="text-sm text-slate-500 font-medium leading-relaxed">解绑后本设备将失去且清除本地数据，请慎重操作。</p>
+        </div>
+        <div class="px-6 py-5 bg-slate-50/50 border-t border-slate-100 grid grid-cols-2 gap-4">
+          <button @click="showUnbindModal = false" class="btn btn-subtle py-3.5 rounded-xl text-[15px]">取消保留</button>
+          <button @click="confirmUnbindDevice" class="btn btn-danger py-3.5 rounded-xl text-[15px]">确认解绑</button>
+        </div>
+      </div>
+    </div>
+  </transition>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
+import { ipcRenderer } from 'electron';
 import { useMainStore } from '../store/useMainStore';
-import { apiUnbindLicense, apiPost, apiGet, clearLocalCache, saveLabel, deleteLabel, clearAndImportDB } from '../utils/db';
+// 🌟 核心：引入了 saveBatchToLocal 和 saveBatchLabels 用于搬家
+import { apiUnbindLicense, apiPost, apiGet, clearLocalCache, saveLabel, deleteLabel, clearAndImportDB, saveBatchToLocal, saveBatchLabels } from '../utils/db';
 import type { LabelData } from '../types';
 import LabelThumbnail from '../components/LabelThumbnail.vue';
+
+// 平台配置字典
+const platforms = [
+  { id: 'TEMU', name: 'TEMU' },
+  { id: 'SHEIN', name: 'SHEIN' },
+  { id: 'TIKTOK', name: 'TIKTOK' },
+  { id: 'ALIEXPRESS', name: 'ALIEXPRESS' },
+  { id: 'AMAZON', name: 'AMAZON' },
+  { id: 'EMAG', name: 'EMAG' },
+  { id: 'OTHER', name: '其他' }
+];
+
+// 切换平台分类
+async function switchPlatform(platformId: string) {
+  if (store.currentPlatform === platformId) return; // 重复点击拦截
+  
+  store.currentPlatform = platformId;
+  currentPage.value = 1;
+  store.showLoading('加载中...');
+  await store.fetchLabels(1, 10);
+  store.hideLoading();
+}
 
 const store = useMainStore();
 const currentPage = ref(1);
@@ -162,7 +226,21 @@ async function changePage(page: number) {
 }
 
 function openEditor(label: LabelData) { store.currentLabel = JSON.parse(JSON.stringify(label)); store.setView('editor'); }
-function openNewEditor() { store.currentLabel = { id: Date.now().toString(), name: '新建标签', wMM: 100, hMM: 100, elements: [] }; store.setView('editor'); }
+function openNewEditor() { 
+  // 🌟 判断当前选中的平台。如果是 "ALL" (全部)，则默认分配到 "OTHER"
+  const targetPlatform = store.currentPlatform === 'ALL' ? 'OTHER' : store.currentPlatform;
+
+  store.currentLabel = { 
+    id: Date.now().toString(), 
+    name: '新建标签', 
+    wMM: 100, 
+    hMM: 100, 
+    elements: [],
+    platform: targetPlatform // 🌟 核心：将平台参数传给新建的标签画布数据
+  }; 
+  
+  store.setView('editor'); 
+}
 
 const showRenameModal = ref(false);
 const renameValue = ref('');
@@ -188,27 +266,18 @@ async function confirmRename() {
 async function confirmDeleteLabel() {
     store.showLoading('正在删除...');
     try {
-        // 彻底删除云端及本地数据
         await deleteLabel(deleteTargetId.value); 
         
-        // 分页逻辑处理：如果当前页只剩最后1条，且不是第1页，删完后向前翻一页
         let targetPage = currentPage.value;
         if (store.savedLabels.length === 1 && currentPage.value > 1) {
             targetPage -= 1;
         }
         currentPage.value = targetPage;
-
-        // 🌟 核心修复：重新执行分页查询，传入第四个参数 preferLocal = true
-        // 优先查询本地数据，如果本地数据为空再去查云端
-        await store.fetchLabels(targetPage, 10, false, true);
+        await store.fetchLabels(targetPage, 10, false, true); // 删除后优先查本地
         
         showDeleteModal.value = false; 
         (window as any).showToast('已永久删除', 'success');
-    } catch (e: any) { 
-        (window as any).showToast(e.message, 'error'); 
-    } finally { 
-        store.hideLoading(); 
-    }
+    } catch (e: any) { (window as any).showToast(e.message, 'error'); } finally { store.hideLoading(); }
 }
 
 const showUnbindModal = ref(false);
@@ -230,7 +299,67 @@ async function confirmUnbindDevice() {
     } catch (err: any) { (window as any).showToast(err.message, 'error'); } finally { store.hideLoading(); }
 }
 
+// 传入 platform 参数：'shuaishou' | 'jiatong'
+async function startMigration(platform: string) {
+  showMigrationModal.value = false; // 关闭选择弹窗
+  store.showLoading('正在检测登录状态...');
+
+  const progressHandler = (_: any, message: string) => {
+    if (message === 'WAITING_LOGIN') {
+      store.hideLoading();
+      (window as any).showToast('请在弹出的窗口中登录账号', 'info');
+    } else {
+      store.showLoading(message);
+    }
+  };
+  
+  ipcRenderer.on('migration-progress', progressHandler);
+
+  try {
+    // 🌟 将选中的平台参数传给主进程
+    const result = await ipcRenderer.invoke('migrate-labels', platform);
+    ipcRenderer.off('migration-progress', progressHandler);
+
+    if (result && result.success) {
+      const labels = result.labels || [];
+      if (labels.length === 0) {
+        store.hideLoading();
+        return (window as any).showToast('目标系统内没有找到任何标签', 'info');
+      }
+
+      try {
+        await saveBatchLabels(labels); 
+      } catch (cloudErr: any) {
+        store.hideLoading();
+        return (window as any).showToast(cloudErr.message || '云端保存失败，已终止搬家', 'error');
+      }
+      
+      await saveBatchToLocal(labels); 
+      
+      currentPage.value = 1;
+      await store.fetchLabels(1, 10, false, true);
+      
+      store.hideLoading();
+      (window as any).showToast(`搬家成功！已成功导入 ${labels.length} 个标签`, 'success');
+      
+    } else {
+      store.hideLoading();
+      if (result && result.error && result.error.includes('窗口已关闭')) {
+        (window as any).showToast('已取消迁移', 'info');
+      } else {
+        (window as any).showToast(result?.error || '迁移失败', 'error');
+      }
+    }
+  } catch (err: any) {
+    console.error('搬家过程出错:', err);
+    store.hideLoading();
+    ipcRenderer.off('migration-progress', progressHandler);
+    (window as any).showToast('通信失败，请检查网络', 'error');
+  }
+}
+
 const showImportShareModal = ref(false);
+const showMigrationModal = ref(false); // 控制搬家选择弹窗
 const inputShareCode = ref('');
 const showShareResultModal = ref(false);
 const displayShareCode = ref('');
@@ -288,7 +417,7 @@ function handleJsonImport(e: Event) {
 </script>
 
 <style scoped>
-@reference "../style.css";
+@reference "../style.css"; 
 
 .modal-enter-active, .modal-leave-active { transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
 .modal-enter-from, .modal-leave-to { opacity: 0; transform: scale(0.95); }
