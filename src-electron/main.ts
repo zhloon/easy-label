@@ -164,14 +164,9 @@ ipcMain.handle('migrate-labels', async (event, platform: string) => {
           reject(e.message);
         }
       } else {
-        if (!migrateWin.isVisible()) {
-          console.log(`👁️ [Migration] 窗口不可见，正在显示窗口...`);
-          migrateWin.show();
-          event.sender.send('migration-progress', 'WAITING_LOGIN');
-          injectLoginTip(migrateWin, platform);
-        } else {
-          console.log(`👁️ [Migration] 窗口已可见`);
-        }
+        console.log(`⏳ [Migration] 等待用户登录...`);
+        event.sender.send('migration-progress', 'WAITING_LOGIN');
+        injectLoginTip(migrateWin, platform);
       }
     }, 1500);
   });

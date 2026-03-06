@@ -373,7 +373,7 @@ export function createMigrationWindow(platform: string): BrowserWindow {
     width: 1000,
     height: 700,
     title: `登录${config.name}`,
-    show: false,
+    show: true,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
