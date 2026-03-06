@@ -100,23 +100,11 @@ ipcMain.handle('set-badge', (event, count: number) => {
 });
 
 // ======================================================================
-// 🚀 主路由：支持前端传入本地存储的 Token (实现免弹窗闭环)
+// 🚀 主路由：每次都需要通过内部浏览器登录获取 Token
 // ======================================================================
-ipcMain.handle('migrate-labels', async (event, platform: string, storedAuth?: any) => {
+ipcMain.handle('migrate-labels', async (event, platform: string) => {
   return new Promise(async (resolve, reject) => {
-    
-    // 🌟 1. 优先使用前端传入的本地 Token
-    if (storedAuth && storedAuth.token) {
-      console.log(`✅ [Migrate] 检测到 ${platform} 本地授权，正在静默抓取...`);
-      try {
-        const result = await executeMigration(platform, storedAuth, event);
-        return resolve(result); 
-      } catch (e) {
-        console.warn('本地 Token 可能已过期，回退到登录弹窗模式');
-      }
-    }
-
-    // 🌟 2. 如果无 Token 或已过期，弹出窗口要求登录
+    // 🌟 弹出窗口要求登录
     const migrateWin = createMigrationWindow(platform);
     const targetUrl = platform === 'shuaishou' ? 'https://dztool.shuaishou.com/' : 'https://jiatongkuajing.com/';
     
