@@ -104,9 +104,18 @@ ipcMain.handle('set-badge', (event, count: number) => {
 // ======================================================================
 ipcMain.handle('migrate-labels', async (event, platform: string) => {
   return new Promise(async (resolve, reject) => {
+    console.log(`🚀 [Migration] 开始创建迁移窗口:`, { platform });
+    
     // 🌟 弹出窗口要求登录
     const migrateWin = createMigrationWindow(platform);
     const targetUrl = platform === 'shuaishou' ? 'https://dztool.shuaishou.com/' : 'https://jiatongkuajing.com/';
+    
+    console.log(`📋 [Migration] 窗口创建完成`, {
+      platform,
+      targetUrl,
+      width: migrateWin.getBounds().width,
+      height: migrateWin.getBounds().height
+    });
     
     let isLoaded = false;
     
@@ -120,6 +129,7 @@ ipcMain.handle('migrate-labels', async (event, platform: string) => {
     });
     
     migrateWin.loadURL(targetUrl);
+    console.log(`⏳ [Migration] 正在加载 URL:`, targetUrl);
 
     let pollInterval: NodeJS.Timeout;
     let hasStartedMigration = false;
@@ -155,9 +165,12 @@ ipcMain.handle('migrate-labels', async (event, platform: string) => {
         }
       } else {
         if (!migrateWin.isVisible()) {
+          console.log(`👁️ [Migration] 窗口不可见，正在显示窗口...`);
           migrateWin.show();
           event.sender.send('migration-progress', 'WAITING_LOGIN');
           injectLoginTip(migrateWin, platform);
+        } else {
+          console.log(`👁️ [Migration] 窗口已可见`);
         }
       }
     }, 1500);
