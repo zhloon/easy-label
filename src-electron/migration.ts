@@ -16,7 +16,8 @@ const PLATFORMS = {
     ],
     listApi: '/api/tool_api/printTemplates/list',
     detailApi: (id: number) => `/api/tool_api/printTemplates/detail?id=${id}`,
-    tokenKey: 'tokenKey'
+    tokenKey: 'tokenKey',
+    token: 'token'
   },
   jiatong: {
     name: '佳同工具',
@@ -222,7 +223,12 @@ async function fetchPlatformList(platform: string, auth: AuthResult, progressCal
     platform,
     configName: config.name,
     baseUrl: config.baseUrl,
-    tokenKey: config.tokenKey
+    tokenKey: config.tokenKey,
+    auth: {
+      token: auth.token ? auth.token.substring(0, 10) + '...' : 'missing',
+      tokenKey: auth.tokenKey ? auth.tokenKey.substring(0, 10) + '...' : 'missing'
+    },
+    headers
   });
 
   const results: any[] = [];
