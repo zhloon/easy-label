@@ -393,13 +393,22 @@ export async function checkLoginStatus(
     if (platform === 'shuaishou') {
       const result = await window.webContents.executeJavaScript(`
         (function() {
+          console.log('[Debug] 检查甩手 localStorage:', Object.keys(window.localStorage));
           const userStoreStr = window.localStorage.getItem('userStore');
+          console.log('[Debug] userStoreStr:', userStoreStr);
           if (!userStoreStr) return null;
           const userStore = JSON.parse(userStoreStr);
+          console.log('[Debug] userStore:', userStore);
           if (!userStore.token) return null;
           return { token: userStore.token, tokenKey: userStore.tokenKey };
         })();
       `);
+      console.log(`📋 [Migration] 甩手 token 检查结果:`, result ? { 
+        hasToken: !!result.token, 
+        hasTokenKey: !!result.tokenKey,
+        tokenLen: result.token?.length,
+        tokenKeyLen: result.tokenKey?.length
+      } : 'null');
       if (result) {
         console.log(`✅ [Migration] 甩手工具登录状态检查成功`);
       } else {
@@ -409,11 +418,18 @@ export async function checkLoginStatus(
     } else if (platform === 'jiatong') {
       const result = await window.webContents.executeJavaScript(`
         (function() {
+          console.log('[Debug] 检查佳同 localStorage:', Object.keys(window.localStorage));
+          console.log('[Debug] 检查佳同 sessionStorage:', Object.keys(window.sessionStorage));
           const token = window.localStorage.getItem('token') || window.sessionStorage.getItem('token');
+          console.log('[Debug] token:', token);
           if (!token) return null;
           return { token: token };
         })();
       `);
+      console.log(`📋 [Migration] 佳同 token 检查结果:`, result ? { 
+        hasToken: !!result.token,
+        tokenLen: result.token?.length
+      } : 'null');
       if (result) {
         console.log(`✅ [Migration] 佳同工具登录状态检查成功`);
       } else {
@@ -422,7 +438,7 @@ export async function checkLoginStatus(
       return result;
     }
   } catch (e: any) {
-    console.error(`❌ [Migration] 检查登录状态失败:`, e.message);
+    console.error(`❌ [Migration] 检查登录状态失败:`, e.message, e.stack);
     return null;
   }
 
