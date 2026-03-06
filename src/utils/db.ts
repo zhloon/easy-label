@@ -1,4 +1,3 @@
-/// <reference types="vite/client" />
 import { ipcRenderer } from 'electron';
 
 const DB_NAME = 'easy-label-db';
@@ -58,15 +57,25 @@ async function getLocalLabels(): Promise<any[]> {
   });
 }
 
+// 🌟 新增：专门供给删除后本地极速重载分页数据的方法
+export async function getLocalLabelsPaginated(page = 1, pageSize = 10) {
+  const localData = await getLocalLabels();
+  // 模拟服务端：按时间倒序排列（最新的在最前）
+  localData.sort((a, b) => Number(b.id) - Number(a.id));
+  const start = (page - 1) * pageSize;
+  return { 
+    labels: localData.slice(start, start + pageSize), 
+    total: localData.length 
+  };
+}
+
 // ==========================================
-// 🌟 统一网络请求层 (移步前端，F12 网络面板可见)
+// 🌟 统一网络请求层
 // ==========================================
 
 export async function apiPost(path: string, data: any = {}) {
-  // 跨进程获取硬件指纹
   const deviceId = await ipcRenderer.invoke('get-device-id');
   const key = data.key !== undefined ? data.key : getAuthKey();
-  
   const payload = { key, deviceId, ...data };
   const baseURL = import.meta.env.DEV ? '' : 'https://easylabel.cloud';
 
@@ -92,21 +101,19 @@ export async function apiGet(path: string) {
   }
 }
 
-// 暴露鉴权相关接口
 export const apiAutoLogin = () => apiPost('/api/auto-login');
 export const apiVerifyLicense = (key: string) => apiPost('/api/verify', { key });
 export const apiUnbindLicense = (key: string) => apiPost('/api/unbind', { key });
 
-
 // ==========================================
-// 🌟 强一致性业务层 (优先云端，本地兜底)
+// 🌟 强一致性业务层
 // ==========================================
 
 export async function saveLabel(label: any) {
   if (!getAuthKey()) throw new Error('未授权');
   const res = await apiPost('/api/labels/save', { label });
   if (!res.success) throw new Error(res.error || '云端保存失败');
-  await saveToLocal(label); // 云端成功后写入本地
+  await saveToLocal(label); 
   return res;
 }
 
@@ -118,23 +125,17 @@ export async function deleteLabel(labelId: string) {
   return res;
 }
 
-// 🌟 这里控制拉取的条数默认值为 10（完美适配 2 行网格）
 export async function getCloudLabels(page = 1, pageSize = 10) {
   if (!getAuthKey()) throw new Error('未授权');
-  
   try {
     const res = await apiPost('/api/labels/get', { page, pageSize });
     if (!res.success) throw new Error(res.error || '获取云端数据失败');
     
     const labels = res.labels || [];
-    for (const lbl of labels) await saveToLocal(lbl); // 刷新本地缓存
+    for (const lbl of labels) await saveToLocal(lbl); 
     return { labels, total: res.total || labels.length };
-    
   } catch (err) {
-    console.warn('云端拉取失败，启用本地缓存兜底', err);
-    const localData = await getLocalLabels();
-    const start = (page - 1) * pageSize;
-    return { labels: localData.slice(start, start + pageSize), total: localData.length };
+    return await getLocalLabelsPaginated(page, pageSize);
   }
 }
 
