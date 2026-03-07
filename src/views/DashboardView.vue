@@ -137,11 +137,11 @@
           <div class="p-8 flex flex-col gap-5 bg-white">
             
             <button @click="startMigration('shuaishou')" class="w-full h-24 rounded-2xl border-2 border-slate-200 hover:border-indigo-500 overflow-hidden relative group p-3 flex items-center justify-center bg-white cursor-pointer">
-              <img src="/shuaishou.png" alt="甩手" class="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+              <img src="shuaishou.png" alt="甩手" class="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300" />
             </button>
 
             <button @click="startMigration('jiatong')" class="w-full h-24 rounded-2xl border-2 border-slate-200 hover:border-indigo-500 overflow-hidden relative group p-3 flex items-center justify-center bg-white cursor-pointer">
-              <img src="/jiatong.png" alt="佳同" class="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+              <img src="jiatong.png" alt="佳同" class="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-300" />
             </button>
 
           </div>
