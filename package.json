@@ -50,7 +50,7 @@
       "dist-electron/**/*"
     ],
     "mac": {
-      "icon": "icon.png",
+      "icon": "./public/icon.png",
       "artifactName": "EasyLabel-macOS-${arch}-v${version}.${ext}",
       "target": [
         {
@@ -63,7 +63,7 @@
       ]
     },
     "win": {
-      "icon": "icon.ico",
+      "icon": "./public/icon.ico",
       "artifactName": "EasyLabel-Windows-${arch}-v${version}.${ext}",
       "target": [
         {
@@ -75,7 +75,7 @@
       ]
     },
     "linux": {
-      "icon": "icon.png",
+      "icon": "./public/icon.png",
       "artifactName": "EasyLabel-Linux-${arch}-v${version}.${ext}",
       "target": [
         {
