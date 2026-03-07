@@ -59,6 +59,10 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // 🌟 补充：专门为 macOS 设置底部 Dock 栏的图标
+  if (process.platform === 'darwin') {
+    app.dock.setIcon(path.join(publicPath, 'icon.png'));
+  }
   createWindow();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
