@@ -1,7 +1,9 @@
 <template>
   <div class="w-full h-full overflow-auto custom-scrollbar bg-slate-50 flex p-12" ref="containerRef">
-    <div class="bg-white shadow-[0_12px_40px_rgba(0,0,0,0.15)] shrink-0 m-auto relative transition-none"
-         :style="{ width: physicalW + 'px', height: physicalH + 'px' }">
+    <div 
+      class="bg-white shadow-[0_12px_40px_rgba(0,0,0,0.15)] m-auto relative transition-none"
+      :style="{ width: physicalW + 'px', height: physicalH + 'px' }"
+    >
       <canvas ref="canvasRef"></canvas>
     </div>
   </div>
@@ -22,16 +24,15 @@ const emit = defineEmits(['update:activeElement', 'modified', 'update:zoom']);
 const containerRef = ref<HTMLElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 
+// 🌟 将白纸和红线单独抽离为全局引用，从此只改大小，不删图层！
 let fCanvas: fabric.Canvas | null = null;
 let paperRect: fabric.Rect | null = null;
-const mmToPx = 3.78; 
+let safeRect: fabric.Rect | null = null;
 
+const mmToPx = 3.78; 
 const physicalW = ref(0);
 const physicalH = ref(0);
 
-// ==========================================
-// 🌟 强力基因：注入极致美观的白边蓝色实心小圆点
-// ==========================================
 const baseConfig: any = {
   transparentCorners: false,       
   cornerColor: '#3b82f6',          
@@ -43,11 +44,11 @@ const baseConfig: any = {
   cornerStyle: 'circle',           
   strokeWidth: 0,                  
   lockRotation: true,           
-  lockScalingFlip: true            // 绝对锁死反向翻转
+  lockScalingFlip: true            
 };
 
 // ==========================================
-// 1. 核心缩放引擎
+// 1. 核心缩放引擎：内外同步，精准对齐
 // ==========================================
 const centerAndZoom = (zoomLevel: number) => {
   if (!fCanvas || !paperRect) return;
@@ -55,51 +56,53 @@ const centerAndZoom = (zoomLevel: number) => {
   const logicW = Number(props.wMM) * mmToPx;
   const logicH = Number(props.hMM) * mmToPx;
   
+  // Vue 的外壳尺寸
   physicalW.value = logicW * zoomLevel;
   physicalH.value = logicH * zoomLevel;
   
+  // Fabric 内部真实尺寸严格同步
   fCanvas.setDimensions({ width: physicalW.value, height: physicalH.value });
   fCanvas.setViewportTransform([zoomLevel, 0, 0, zoomLevel, 0, 0]);
-  fCanvas.requestRenderAll();
 };
 
-const setCanvasZoom = (zoom: number) => centerAndZoom(zoom);
+const setCanvasZoom = (zoom: number) => {
+  centerAndZoom(zoom);
+  fCanvas?.requestRenderAll();
+};
 
 // ==========================================
-// 🌟 终极物理引擎：0px 贴边硬碰撞 & 快照锁死技术
+// 2. 物理引擎：0.5mm 贴边硬碰撞 & 快照锁死技术
 // ==========================================
-
-// A. 负责拖拽移动：简单粗暴的 0px 坐标拦截墙
 const handleMoving = (e: any) => {
   const obj = e.target;
-  if (!obj || !fCanvas || obj === paperRect) return;
+  if (!obj || !fCanvas || obj === paperRect || obj === safeRect) return;
 
   const logicW = Number(props.wMM) * mmToPx;
   const logicH = Number(props.hMM) * mmToPx;
+  const safeMargin = 0.5 * mmToPx; 
 
   let left = obj.left || 0;
   let top = obj.top || 0;
   const w = obj.getScaledWidth();
   const h = obj.getScaledHeight();
 
-  // 无论如何滑动，绝不让元素越过 0 误差边界
-  if (left < 0) left = 0;
-  if (top < 0) top = 0;
-  if (left + w > logicW) left = Math.max(0, logicW - w);
-  if (top + h > logicH) top = Math.max(0, logicH - h);
+  if (left < safeMargin) left = safeMargin;
+  if (top < safeMargin) top = safeMargin;
+  if (left + w > logicW - safeMargin) left = Math.max(safeMargin, logicW - safeMargin - w);
+  if (top + h > logicH - safeMargin) top = Math.max(safeMargin, logicH - safeMargin - h);
 
   if (obj.left !== left || obj.top !== top) {
     obj.set({ left, top });
   }
 };
 
-// B. 负责拉伸缩放：使用【安全快照帧回溯】，碰壁直接卡死，没有任何移位和闪烁！
 const handleScaling = (e: any) => {
   const obj = e.target;
-  if (!obj || !fCanvas || obj === paperRect || !obj._lastSafeState) return;
+  if (!obj || !fCanvas || obj === paperRect || obj === safeRect || !obj._lastSafeState) return;
 
   const logicW = Number(props.wMM) * mmToPx;
   const logicH = Number(props.hMM) * mmToPx;
+  const safeMargin = 0.5 * mmToPx; 
   
   const w = obj.getScaledWidth();
   const h = obj.getScaledHeight();
@@ -109,35 +112,35 @@ const handleScaling = (e: any) => {
   const isLine = obj.get('customType') === 'line';
   const isVert = obj.get('isVertical');
 
-  // 定义不可逾越的最小尺寸 10px (线条根据横竖处理为 2px)
   const minW = isLine ? (isVert ? 2 : 10) : 10;
   const minH = isLine ? (isVert ? 10 : 2) : 10;
 
-  // 判断是否撞墙或者小到极限
-  const isOut = left < 0 || top < 0 || left + w > logicW || top + h > logicH;
+  const epsilon = 0.1;
+  const isOut = 
+    left < safeMargin - epsilon || 
+    top < safeMargin - epsilon || 
+    left + w > logicW - safeMargin + epsilon || 
+    top + h > logicH - safeMargin + epsilon;
+
   const isTooSmall = w < minW || h < minH;
 
   if (isOut || isTooSmall) {
-      // 🌟 撞墙了！立刻恢复上一帧的完美安全状态，绝不改变任何反向坐标锚点！
       obj.set(obj._lastSafeState);
   } else {
-      // 🌟 安全区域内，平滑更新安全快照
       obj._lastSafeState = { left: obj.left, top: obj.top, scaleX: obj.scaleX, scaleY: obj.scaleY, width: obj.width, height: obj.height };
   }
 
-  // 文本排版自适应优化
   if (obj.get('customType') === 'text') {
       obj.set({ width: Math.max(obj.width * obj.scaleX, 20), scaleX: 1, scaleY: 1 });
   }
 };
 
 // ==========================================
-// 2. 初始化 Fabric 画布
+// 3. 初始化 Canvas 和图层构建
 // ==========================================
 const initCanvas = () => {
   if (!canvasRef.value) return;
 
-  // 🌟 全局强行注入极简高级圆点属性，绝对生效
   Object.assign(fabric.Object.prototype, baseConfig);
 
   fCanvas = new fabric.Canvas(canvasRef.value, {
@@ -147,7 +150,7 @@ const initCanvas = () => {
 
   fCanvas.on('object:added', (opt) => {
     const obj = opt.target;
-    if (!obj || obj === paperRect) return;
+    if (!obj || obj === paperRect || obj === safeRect) return;
     if (obj.get('customType') === 'barcode') {
       obj.setControlsVisibility({ mt: false, mb: false, ml: false, mr: false, tl: false, tr: false, bl: false, br: false, mtr: false });
     } else if (obj.get('customType') !== 'line') {
@@ -155,19 +158,16 @@ const initCanvas = () => {
     }
   });
 
-  // 🌟 核心：在拉伸触碰前记录第一帧快照
   fCanvas.on('before:transform', (e: any) => {
       const obj = e.transform?.target;
-      if (obj && obj !== paperRect) {
+      if (obj && obj !== paperRect && obj !== safeRect) {
           obj._lastSafeState = { left: obj.left, top: obj.top, scaleX: obj.scaleX, scaleY: obj.scaleY, width: obj.width, height: obj.height };
       }
   });
 
-  // 独立绑定，互不干扰
   fCanvas.on('object:moving', handleMoving);
   fCanvas.on('object:scaling', handleScaling);
 
-  // 操作结束后烘焙属性，保持对象最纯净状态
   fCanvas.on('object:modified', () => { 
     const obj = fCanvas!.getActiveObject() as any;
     if (obj && obj.get('customType') === 'line') {
@@ -196,7 +196,7 @@ const initCanvas = () => {
 const syncActiveObject = () => {
   if (!fCanvas) return;
   const activeObj = fCanvas.getActiveObject();
-  if (!activeObj || activeObj === paperRect) {
+  if (!activeObj || activeObj === paperRect || activeObj === safeRect) {
     emit('update:activeElement', null);
     return;
   }
@@ -211,22 +211,41 @@ const syncActiveObject = () => {
   });
 };
 
-// ==========================================
-// 3. 绘制纸张与初始数据解析
-// ==========================================
 const renderPaper = () => {
   if (!fCanvas) return;
   const currentZoom = fCanvas.getZoom() || 1;
   fCanvas.clear();
 
-  const paperW = Number(props.wMM) * mmToPx;
-  const paperH = Number(props.hMM) * mmToPx;
+  const logicW = Number(props.wMM) * mmToPx;
+  const logicH = Number(props.hMM) * mmToPx;
 
+  // 1. 唯一一次创建白底 (最先添加 = 最底层)
   paperRect = new fabric.Rect({
-    left: 0, top: 0, width: paperW, height: paperH, fill: '#ffffff',
+    left: 0, top: 0, width: logicW, height: logicH, fill: '#ffffff',
     selectable: false, evented: false, strokeWidth: 0, hoverCursor: 'default'
   });
+  paperRect.set('customType', 'paperRect');
   fCanvas.add(paperRect);
+
+  // 2. 唯一一次创建红线 (紧随其后 = 倒数第二层)
+  const safeMargin = 0.5 * mmToPx;
+  safeRect = new fabric.Rect({
+    left: safeMargin, 
+    top: safeMargin, 
+    width: Math.max(0, logicW - safeMargin * 2), 
+    height: Math.max(0, logicH - safeMargin * 2),
+    fill: 'transparent',
+    stroke: '#ff4d4f', 
+    strokeWidth: 1, 
+    strokeUniform: true, 
+    strokeDashArray: [4, 4],
+    selectable: false,   
+    evented: false,      
+    hoverCursor: 'default',
+    excludeFromExport: true
+  });
+  safeRect.set('customType', 'safeArea');
+  fCanvas.add(safeRect);
 
   props.initialElements.forEach(el => {
     const parsePx = (val: string | number) => parseFloat(String(val).replace('px', '')) || 0;
@@ -295,13 +314,10 @@ const renderPaper = () => {
     }
   });
 
-  fCanvas.renderAll();
   centerAndZoom(currentZoom);
+  fCanvas.requestRenderAll();
 };
 
-// ==========================================
-// 4. 对外暴露的方法 (纯净点击居中生成)
-// ==========================================
 const getPaperCenter = () => {
   return { cx: (Number(props.wMM) * mmToPx) / 2, cy: (Number(props.hMM) * mmToPx) / 2 };
 };
@@ -388,7 +404,7 @@ const deleteActive = () => {
   if (!fCanvas) return;
   const activeObjects = fCanvas.getActiveObjects();
   if (activeObjects.length) {
-    activeObjects.forEach(obj => { if (obj !== paperRect) fCanvas!.remove(obj); });
+    activeObjects.forEach(obj => { if (obj !== paperRect && obj !== safeRect) fCanvas!.remove(obj); });
     fCanvas.discardActiveObject();
     fCanvas.requestRenderAll();
     emit('modified');
@@ -409,8 +425,6 @@ const updateActiveTextProperty = (key: string, value: any) => {
 const updateActiveLineProperty = (isVertical: boolean, lengthPx: number) => {
   const obj = fCanvas?.getActiveObject() as any;
   if (obj && obj.get('customType') === 'line') {
-    const left = obj.left!;
-    const top = obj.top!;
     obj.set({
       width: isVertical ? 2 : Math.max(lengthPx, 10),
       height: isVertical ? Math.max(lengthPx, 10) : 2,
@@ -448,11 +462,11 @@ const resetBarcodeSize = () => {
 };
 
 const exportToJSON = () => {
-  if (!fCanvas || !paperRect) return [];
+  if (!fCanvas) return [];
   const elements: any[] = [];
   
   fCanvas.getObjects().forEach(obj => {
-    if (obj === paperRect) return;
+    if (obj === paperRect || obj === safeRect) return;
     const leftPx = obj.left!;
     const topPx = obj.top!;
     const widthPx = (obj.width || 0) * (obj.scaleX || 1);
@@ -480,12 +494,39 @@ const exportToJSON = () => {
   return elements;
 };
 
+// 🌟 当尺寸变化时：【只改宽高，不改图层】
 watch(() => [props.wMM, props.hMM], () => { 
-  if (!paperRect || !fCanvas) return;
-  paperRect.set({ width: Number(props.wMM) * mmToPx, height: Number(props.hMM) * mmToPx });
-  paperRect.setCoords();
+  if (!fCanvas) return;
+  
+  const logicW = Number(props.wMM) * mmToPx;
+  const logicH = Number(props.hMM) * mmToPx;
+
+  // 直接修改原纸张的大小（不删不加，绝不改变图层层级）
+  if (paperRect) {
+    paperRect.set({ width: logicW, height: logicH });
+    paperRect.setCoords();
+  }
+
+  // 直接修改红线的大小
+  const safeMargin = 0.5 * mmToPx;
+  if (safeRect) {
+    safeRect.set({
+      width: Math.max(0, logicW - safeMargin * 2),
+      height: Math.max(0, logicH - safeMargin * 2)
+    });
+    safeRect.setCoords();
+  }
+
+  // 同步内外尺寸
   centerAndZoom(fCanvas.getZoom() || 1); 
-  fCanvas.getObjects().forEach(obj => handleMoving({ target: obj }));
+  
+  // 把元素挤回新的框里
+  fCanvas.getObjects().forEach(obj => {
+    if (obj !== paperRect && obj !== safeRect) {
+      handleMoving({ target: obj });
+    }
+  });
+  
   fCanvas.requestRenderAll();
   emit('modified'); 
 });
@@ -519,8 +560,21 @@ defineExpose({
 </script>
 
 <style scoped>
-/* 🌟 核心防御：完全禁止一切 CSS 对 Fabric Canvas 坐标系产生的致命偏移污染！ */
+/* 🌟 核心破局：物理学消灭错位！强制内部 Fabric 画布绝对填满 Vue 控制的那个带阴影白纸壳 */
+:deep(.canvas-container) {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
 :deep(canvas) {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
   outline: none !important;
 }
 </style>
