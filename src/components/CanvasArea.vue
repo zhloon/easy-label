@@ -1,14 +1,8 @@
 <template>
-  <div class="flex-1 w-full h-full bg-slate-100 relative overflow-hidden" ref="containerRef">
-    <canvas ref="canvasRef"></canvas>
-    
-    <div class="absolute bottom-6 right-6 flex gap-2 shadow-lg bg-white rounded-lg p-2 z-10">
-      <button @click="resetZoom" class="p-2 hover:bg-slate-100 rounded text-sm text-slate-700 font-medium">
-        🔍 居中视图
-      </button>
-      <button @click="clearCanvas" class="p-2 hover:bg-slate-100 rounded text-sm text-red-600 font-medium">
-        🗑️ 清空画布
-      </button>
+  <div class="w-full h-full overflow-auto custom-scrollbar bg-slate-50 flex p-12" ref="containerRef">
+    <div class="bg-white shadow-[0_12px_40px_rgba(0,0,0,0.15)] shrink-0 m-auto relative transition-none"
+         :style="{ width: physicalW + 'px', height: physicalH + 'px' }">
+      <canvas ref="canvasRef"></canvas>
     </div>
   </div>
 </template>
@@ -17,244 +11,516 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 import * as fabric from 'fabric';
 
-// 从您的 store 中获取当前选中的标签数据
-// import { useMainStore } from '../store/useMainStore';
-// const store = useMainStore();
+const props = defineProps<{
+  wMM: number;
+  hMM: number;
+  initialElements: any[];
+}>();
+
+const emit = defineEmits(['update:activeElement', 'modified', 'update:zoom']);
 
 const containerRef = ref<HTMLElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 
-// 全局维护 Fabric 实例
 let fCanvas: fabric.Canvas | null = null;
-let paperRect: fabric.Rect | null = null; // 底层白纸
+let paperRect: fabric.Rect | null = null;
+const mmToPx = 3.78; 
+
+const physicalW = ref(0);
+const physicalH = ref(0);
 
 // ==========================================
-// 🌟 1. 初始化 Fabric 画布
+// 🌟 强力基因：注入极致美观的白边蓝色实心小圆点
 // ==========================================
-const initCanvas = () => {
-  if (!canvasRef.value || !containerRef.value) return;
-
-  fCanvas = new fabric.Canvas(canvasRef.value, {
-    width: containerRef.value.clientWidth,
-    height: containerRef.value.clientHeight,
-    backgroundColor: '#f1f5f9', // 浅蓝灰工作区背景
-    preserveObjectStacking: true, // 选中对象时，保持原有层级不变
-    selection: true, // 允许框选多个组件
-  });
-
-  // 🖱️ 开启鼠标滚轮缩放功能
-  fCanvas.on('mouse:wheel', (opt) => {
-    // 🌟 核心修复 1：显式断言原生事件为 WheelEvent (滚轮事件)
-    const evt = opt.e as WheelEvent; 
-    
-    const delta = evt.deltaY;
-    let zoom = fCanvas!.getZoom();
-    zoom *= 0.999 ** delta;
-    if (zoom > 20) zoom = 20; 
-    if (zoom < 0.1) zoom = 0.1; 
-    
-    // 🌟 核心修复 2：使用 new fabric.Point 包装坐标
-    fCanvas!.zoomToPoint(new fabric.Point(evt.offsetX, evt.offsetY), zoom);
-    
-    evt.preventDefault();
-    evt.stopPropagation();
-  });
-
-  // 🌟 定义局部变量来记录画布拖拽状态，完美避开 TS 报错
-  let isDragging = false;
-  let lastPosX = 0;
-  let lastPosY = 0;
-
-  // 🖱️ 开启按住 Alt 键拖拽平移画布功能
-  fCanvas.on('mouse:down', (opt) => {
-    const evt = opt.e as MouseEvent;
-    if (evt.altKey === true) {
-      isDragging = true;            // 改用局部变量
-      fCanvas!.selection = false;   // selection 是原生属性，不会报错
-      lastPosX = evt.clientX;       // 记录 X 坐标
-      lastPosY = evt.clientY;       // 记录 Y 坐标
-    }
-  });
-
-  fCanvas.on('mouse:move', (opt) => {
-    if (isDragging) {
-      const e = opt.e as MouseEvent;
-      const vpt = fCanvas!.viewportTransform!;
-      
-      // 使用局部变量计算偏移量
-      vpt[4] += e.clientX - lastPosX;
-      vpt[5] += e.clientY - lastPosY;
-      
-      fCanvas!.requestRenderAll();
-      
-      // 更新局部变量
-      lastPosX = e.clientX;
-      lastPosY = e.clientY;
-    }
-  });
-
-  fCanvas.on('mouse:up', () => {
-    if (fCanvas!.viewportTransform) {
-      fCanvas!.setViewportTransform(fCanvas!.viewportTransform);
-    }
-    isDragging = false;           // 释放拖拽状态
-    fCanvas!.selection = true;    // 恢复框选功能
-  });
-
-  fCanvas.on('mouse:up', () => {
-    // 恢复当前的视口变换矩阵
-    if (fCanvas!.viewportTransform) {
-      fCanvas!.setViewportTransform(fCanvas!.viewportTransform);
-    }
-    
-    // 🌟 核心修复：直接修改局部变量，去掉前面的 fCanvas!.
-    isDragging = false;           
-    
-    // 恢复画布的框选功能 (selection 是原生属性，不会报错)
-    fCanvas!.selection = true;    
-  });
-  
-  // 监听窗口大小改变，重置画布宽高
-  window.addEventListener('resize', handleResize);
+const baseConfig: any = {
+  transparentCorners: false,       
+  cornerColor: '#3b82f6',          
+  cornerStrokeColor: '#ffffff',    
+  borderColor: '#3b82f6',          
+  borderDashArray: null,           
+  cornerSize: 10,                  
+  padding: 6,                      
+  cornerStyle: 'circle',           
+  strokeWidth: 0,                  
+  lockRotation: true,           
+  lockScalingFlip: true            // 绝对锁死反向翻转
 };
 
-const handleResize = () => {
-  if (fCanvas && containerRef.value) {
-    // 🌟 核心修复：使用 setDimensions 统一设置宽高，TS 完美支持，且性能更好
-    fCanvas.setDimensions({
-      width: containerRef.value.clientWidth,
-      height: containerRef.value.clientHeight
-    });
-    
-    // 重新渲染画布以适应新尺寸
-    fCanvas.requestRenderAll();
+// ==========================================
+// 1. 核心缩放引擎
+// ==========================================
+const centerAndZoom = (zoomLevel: number) => {
+  if (!fCanvas || !paperRect) return;
+  
+  const logicW = Number(props.wMM) * mmToPx;
+  const logicH = Number(props.hMM) * mmToPx;
+  
+  physicalW.value = logicW * zoomLevel;
+  physicalH.value = logicH * zoomLevel;
+  
+  fCanvas.setDimensions({ width: physicalW.value, height: physicalH.value });
+  fCanvas.setViewportTransform([zoomLevel, 0, 0, zoomLevel, 0, 0]);
+  fCanvas.requestRenderAll();
+};
+
+const setCanvasZoom = (zoom: number) => centerAndZoom(zoom);
+
+// ==========================================
+// 🌟 终极物理引擎：0px 贴边硬碰撞 & 快照锁死技术
+// ==========================================
+
+// A. 负责拖拽移动：简单粗暴的 0px 坐标拦截墙
+const handleMoving = (e: any) => {
+  const obj = e.target;
+  if (!obj || !fCanvas || obj === paperRect) return;
+
+  const logicW = Number(props.wMM) * mmToPx;
+  const logicH = Number(props.hMM) * mmToPx;
+
+  let left = obj.left || 0;
+  let top = obj.top || 0;
+  const w = obj.getScaledWidth();
+  const h = obj.getScaledHeight();
+
+  // 无论如何滑动，绝不让元素越过 0 误差边界
+  if (left < 0) left = 0;
+  if (top < 0) top = 0;
+  if (left + w > logicW) left = Math.max(0, logicW - w);
+  if (top + h > logicH) top = Math.max(0, logicH - h);
+
+  if (obj.left !== left || obj.top !== top) {
+    obj.set({ left, top });
+  }
+};
+
+// B. 负责拉伸缩放：使用【安全快照帧回溯】，碰壁直接卡死，没有任何移位和闪烁！
+const handleScaling = (e: any) => {
+  const obj = e.target;
+  if (!obj || !fCanvas || obj === paperRect || !obj._lastSafeState) return;
+
+  const logicW = Number(props.wMM) * mmToPx;
+  const logicH = Number(props.hMM) * mmToPx;
+  
+  const w = obj.getScaledWidth();
+  const h = obj.getScaledHeight();
+  const left = obj.left || 0;
+  const top = obj.top || 0;
+
+  const isLine = obj.get('customType') === 'line';
+  const isVert = obj.get('isVertical');
+
+  // 定义不可逾越的最小尺寸 10px (线条根据横竖处理为 2px)
+  const minW = isLine ? (isVert ? 2 : 10) : 10;
+  const minH = isLine ? (isVert ? 10 : 2) : 10;
+
+  // 判断是否撞墙或者小到极限
+  const isOut = left < 0 || top < 0 || left + w > logicW || top + h > logicH;
+  const isTooSmall = w < minW || h < minH;
+
+  if (isOut || isTooSmall) {
+      // 🌟 撞墙了！立刻恢复上一帧的完美安全状态，绝不改变任何反向坐标锚点！
+      obj.set(obj._lastSafeState);
+  } else {
+      // 🌟 安全区域内，平滑更新安全快照
+      obj._lastSafeState = { left: obj.left, top: obj.top, scaleX: obj.scaleX, scaleY: obj.scaleY, width: obj.width, height: obj.height };
+  }
+
+  // 文本排版自适应优化
+  if (obj.get('customType') === 'text') {
+      obj.set({ width: Math.max(obj.width * obj.scaleX, 20), scaleX: 1, scaleY: 1 });
   }
 };
 
 // ==========================================
-// 🌟 2. 核心：根据 JSON 渲染标签
+// 2. 初始化 Fabric 画布
 // ==========================================
-const renderLabelData = (labelData: any) => {
+const initCanvas = () => {
+  if (!canvasRef.value) return;
+
+  // 🌟 全局强行注入极简高级圆点属性，绝对生效
+  Object.assign(fabric.Object.prototype, baseConfig);
+
+  fCanvas = new fabric.Canvas(canvasRef.value, {
+    preserveObjectStacking: true, 
+    selection: true,
+  });
+
+  fCanvas.on('object:added', (opt) => {
+    const obj = opt.target;
+    if (!obj || obj === paperRect) return;
+    if (obj.get('customType') === 'barcode') {
+      obj.setControlsVisibility({ mt: false, mb: false, ml: false, mr: false, tl: false, tr: false, bl: false, br: false, mtr: false });
+    } else if (obj.get('customType') !== 'line') {
+      obj.setControlsVisibility({ mtr: false });
+    }
+  });
+
+  // 🌟 核心：在拉伸触碰前记录第一帧快照
+  fCanvas.on('before:transform', (e: any) => {
+      const obj = e.transform?.target;
+      if (obj && obj !== paperRect) {
+          obj._lastSafeState = { left: obj.left, top: obj.top, scaleX: obj.scaleX, scaleY: obj.scaleY, width: obj.width, height: obj.height };
+      }
+  });
+
+  // 独立绑定，互不干扰
+  fCanvas.on('object:moving', handleMoving);
+  fCanvas.on('object:scaling', handleScaling);
+
+  // 操作结束后烘焙属性，保持对象最纯净状态
+  fCanvas.on('object:modified', () => { 
+    const obj = fCanvas!.getActiveObject() as any;
+    if (obj && obj.get('customType') === 'line') {
+        const isVert = obj.get('isVertical');
+        let finalW = obj.width * obj.scaleX;
+        let finalH = obj.height * obj.scaleY;
+        
+        obj.set({
+            width: isVert ? 2 : Math.max(finalW, 10),
+            height: isVert ? Math.max(finalH, 10) : 2,
+            scaleX: 1, scaleY: 1
+        });
+        obj.setCoords();
+    }
+    syncActiveObject(); 
+    emit('modified'); 
+  });
+
+  fCanvas.on('selection:created', syncActiveObject);
+  fCanvas.on('selection:updated', syncActiveObject);
+  fCanvas.on('selection:cleared', () => emit('update:activeElement', null));
+
+  renderPaper();
+};
+
+const syncActiveObject = () => {
   if (!fCanvas) return;
-  fCanvas.clear(); 
-  fCanvas.backgroundColor = '#f1f5f9';
+  const activeObj = fCanvas.getActiveObject();
+  if (!activeObj || activeObj === paperRect) {
+    emit('update:activeElement', null);
+    return;
+  }
+  emit('update:activeElement', {
+    id: activeObj.get('id'),
+    type: activeObj.get('customType'),
+    fontSize: activeObj.get('fontSize'),
+    fontWeight: activeObj.get('fontWeight'),
+    isVertical: activeObj.get('isVertical'),
+    width: (activeObj.get('width') || 0) * (activeObj.get('scaleX') || 1),
+    height: (activeObj.get('height') || 0) * (activeObj.get('scaleY') || 1)
+  });
+};
 
-  // 毫米转像素基准 (以常见 203 DPI 打印机为例，1mm ≈ 8px；如果按屏幕 96dpi 算，1mm ≈ 3.78px)
-  const mmToPx = 3.78; 
-  const paperW = (labelData.wMM || 100) * mmToPx;
-  const paperH = (labelData.hMM || 100) * mmToPx;
+// ==========================================
+// 3. 绘制纸张与初始数据解析
+// ==========================================
+const renderPaper = () => {
+  if (!fCanvas) return;
+  const currentZoom = fCanvas.getZoom() || 1;
+  fCanvas.clear();
 
-  // 👉 2.1 绘制标签底纸 (白底阴影)
+  const paperW = Number(props.wMM) * mmToPx;
+  const paperH = Number(props.hMM) * mmToPx;
+
   paperRect = new fabric.Rect({
-    left: (fCanvas.width! - paperW) / 2,
-    top: (fCanvas.height! - paperH) / 2,
-    width: paperW,
-    height: paperH,
-    fill: '#ffffff',
-    selectable: false, // 纸张不可选中和拖动
-    evented: false,
-    shadow: new fabric.Shadow({ color: 'rgba(0,0,0,0.15)', blur: 15, offsetX: 5, offsetY: 5 })
+    left: 0, top: 0, width: paperW, height: paperH, fill: '#ffffff',
+    selectable: false, evented: false, strokeWidth: 0, hoverCursor: 'default'
   });
   fCanvas.add(paperRect);
 
-  // 👉 2.2 遍历渲染元素
-  const elements = labelData.elements || [];
-  
-  elements.forEach((el: any) => {
-    let fObj: fabric.Object | null = null;
-    
-    // 解析原数据中的位置和尺寸 (去掉 'px')
+  props.initialElements.forEach(el => {
     const parsePx = (val: string | number) => parseFloat(String(val).replace('px', '')) || 0;
-    
-    // 元素的绝对坐标 = 纸张原点坐标 + 元素相对纸张的 left/top
-    const left = paperRect!.left! + parsePx(el.style?.left);
-    const top = paperRect!.top! + parsePx(el.style?.top);
+    const left = parsePx(el.style?.left); 
+    const top = parsePx(el.style?.top);
     const width = parsePx(el.style?.width || 100);
     const height = parsePx(el.style?.height || 20);
 
-    // 🔴 文本渲染：使用 Textbox，天然支持多行和双击编辑！
+    let fObj: fabric.Object | null = null;
+
     if (el.type === 'text') {
       fObj = new fabric.Textbox(el.content || '请输入文字', {
-        left, top, width,
-        fontSize: parsePx(el.fontSize || 14),
+        left, top, width, fontSize: parsePx(el.fontSize || 24),
         fontWeight: el.fontWeight === 'bold' ? 'bold' : 'normal',
-        fontFamily: 'Microsoft YaHei, sans-serif',
-        fill: '#000000',
-        splitByGrapheme: true, // 完美支持中文换行
-        lineHeight: el.style?.lineHeight || 1.2,
+        fontFamily: 'Microsoft YaHei, sans-serif', fill: '#000000', splitByGrapheme: true,
+        ...baseConfig
       });
+      fObj.set('customType', 'text');
     } 
-    // 🔴 线条渲染
     else if (el.type === 'line') {
-      const isVertical = el.isVertical === 'true';
-      fObj = new fabric.Line(
-        [left, top, isVertical ? left : left + width, isVertical ? top + height : top], 
-        { stroke: '#000000', strokeWidth: 1.5, padding: 5 } // padding 增加线的点击热区
-      );
-    } 
-    // 🔴 条码占位 (后续可使用 jsbarcode 渲染为 Base64 传入 fabric.Image)
-    else if (el.type === 'barcode') {
+      const isVertical = el.isVertical === 'true' || el.isVertical === true;
       fObj = new fabric.Rect({
-        left, top, width: el.customW || width, height: el.customH || height,
-        fill: '#f8fafc', stroke: '#94a3b8', strokeDashArray: [4, 4],
+        left, top,
+        width: isVertical ? 2 : Math.max(width, 10),
+        height: isVertical ? Math.max(height, 10) : 2,
+        fill: '#000000',
+        lockScalingX: isVertical, lockScalingY: !isVertical,
+        centeredScaling: false,
+        ...baseConfig
       });
-      // 可以附加文本说明
-      const tagText = new fabric.Text('条码占位: ' + el.content, {
-        left: left + 5, top: top + 5, fontSize: 12, fill: '#64748b'
+      fObj.setControlsVisibility({ tl: false, tr: false, bl: false, br: false, mtr: false, mt: isVertical, mb: isVertical, ml: !isVertical, mr: !isVertical });
+      fObj.set('customType', 'line');
+      fObj.set('isVertical', isVertical);
+    } 
+    else if (el.type === 'image' && el.imgUrl) {
+      fabric.Image.fromURL(el.imgUrl).then((img) => {
+        img.set({ 
+          left, top, customType: 'image', id: el.id, originalUrl: el.originalUrl, imgUrl: el.imgUrl,
+          lockUniScaling: true,
+          ...baseConfig 
+        } as any);
+        img.setControlsVisibility({ mt: false, mb: false, ml: false, mr: false, mtr: false }); 
+        img.scaleToWidth(width);
+        fCanvas?.add(img);
+        fCanvas?.requestRenderAll();
       });
-      // 将底框和文字合成一个组
-      fObj = new fabric.Group([fObj, tagText], { left, top });
+      return; 
+    }
+    else if (el.type === 'barcode') {
+      const rect = new fabric.Rect({
+        left: 0, top: 0, width: el.customW ? el.customW * mmToPx : width, height: el.customH ? el.customH * mmToPx : height,
+        fill: '#f8fafc', stroke: '#94a3b8', strokeDashArray: [4, 4]
+      });
+      const tagText = new fabric.Text('条码占位', { left: 5, top: 5, fontSize: 12, fill: '#64748b' });
+      fObj = new fabric.Group([rect, tagText], { 
+        left, top, customType: 'barcode', customW: el.customW, customH: el.customH,
+        lockScalingX: true, lockScalingY: true,
+        ...baseConfig
+      } as any);
     }
 
-    // 将生成的组件加入画布
     if (fObj) {
-      // 保存一下原始 ID，方便后续修改和保存
-      fObj.set('id', el.id); 
+      fObj.set('id', el.id || Date.now().toString());
       fCanvas!.add(fObj);
+      handleMoving({ target: fObj }); 
     }
   });
 
   fCanvas.renderAll();
-  resetZoom(); // 渲染完毕后自动居中视角
+  centerAndZoom(currentZoom);
 };
 
 // ==========================================
-// 🌟 辅助功能
+// 4. 对外暴露的方法 (纯净点击居中生成)
 // ==========================================
-const resetZoom = () => {
+const getPaperCenter = () => {
+  return { cx: (Number(props.wMM) * mmToPx) / 2, cy: (Number(props.hMM) * mmToPx) / 2 };
+};
+
+const addText = (content = '双击修改文本') => {
   if (!fCanvas || !paperRect) return;
-  // 恢复 1:1 缩放
-  fCanvas.setZoom(1);
-  // 计算纸张中心点，将其挪到画布中心
-  const vpt = fCanvas.viewportTransform!;
-  vpt[4] = (fCanvas.width! - paperRect.width!) / 2 - paperRect.left!;
-  vpt[5] = (fCanvas.height! - paperRect.height!) / 2 - paperRect.top!;
-  fCanvas.requestRenderAll();
+  const { cx, cy } = getPaperCenter();
+  const w = Math.min(200, Number(props.wMM) * mmToPx);
+  const text = new fabric.Textbox(content, {
+    left: Math.max(0, cx - w/2), top: Math.max(0, cy - 15), width: w, 
+    fontSize: 24, fontFamily: 'Microsoft YaHei, sans-serif', fill: '#000000', splitByGrapheme: true,
+    ...baseConfig
+  });
+  text.set('customType', 'text');
+  text.set('id', Date.now().toString());
+  fCanvas.add(text);
+  fCanvas.setActiveObject(text);
+  handleMoving({ target: text });
+  emit('modified');
 };
 
-const clearCanvas = () => {
-  if (fCanvas) {
-    fCanvas.clear();
-    fCanvas.backgroundColor = '#f1f5f9';
-    fCanvas.renderAll();
+const addLine = () => {
+  if (!fCanvas || !paperRect) return;
+  const { cx, cy } = getPaperCenter();
+  const length = Math.max(10, Math.min(150, Number(props.wMM) * mmToPx));
+  
+  const line = new fabric.Rect({
+    left: Math.max(0, cx - length/2), top: Math.max(0, cy - 1), 
+    width: length, height: 2, fill: '#000000',
+    lockScalingY: true, centeredScaling: false,
+    ...baseConfig
+  });
+  line.setControlsVisibility({ tl: false, tr: false, bl: false, br: false, mt: false, mb: false, mtr: false, ml: true, mr: true });
+  line.set('customType', 'line');
+  line.set('isVertical', false);
+  line.set('id', Date.now().toString());
+  fCanvas.add(line);
+  fCanvas.setActiveObject(line);
+  handleMoving({ target: line });
+  emit('modified');
+};
+
+const addImage = (url: string, originalUrl?: string) => {
+  if (!fCanvas || !paperRect) return;
+  const { cx, cy } = getPaperCenter();
+  fabric.Image.fromURL(url).then((img) => {
+    img.scaleToWidth(Math.min(80, Number(props.wMM) * mmToPx));
+    img.set({
+      left: Math.max(0, cx - img.getScaledWidth() / 2), 
+      top: Math.max(0, cy - img.getScaledHeight() / 2),
+      customType: 'image', id: Date.now().toString(), imgUrl: url, originalUrl: originalUrl || url,
+      lockUniScaling: true,
+      ...baseConfig
+    } as any);
+    img.setControlsVisibility({ mt: false, mb: false, ml: false, mr: false, mtr: false });
+    fCanvas?.add(img);
+    fCanvas?.setActiveObject(img);
+    handleMoving({ target: img });
+    emit('modified');
+  });
+};
+
+const addBarcode = (w: number, h: number) => {
+  if (!fCanvas || !paperRect) return;
+  const { cx, cy } = getPaperCenter();
+  const wPx = w * mmToPx; const hPx = h * mmToPx;
+  
+  const rect = new fabric.Rect({ left: 0, top: 0, width: wPx, height: hPx, fill: '#f8fafc', stroke: '#94a3b8', strokeDashArray: [4, 4] });
+  const text = new fabric.Text('条码占位', { left: 5, top: 5, fontSize: 14, fill: '#64748b' });
+  const group = new fabric.Group([rect, text], {
+    left: Math.max(0, cx - wPx / 2), top: Math.max(0, cy - hPx / 2),
+    customType: 'barcode', customW: w, customH: h, id: Date.now().toString(),
+    lockScalingX: true, lockScalingY: true,
+    ...baseConfig
+  } as any);
+  group.setControlsVisibility({ mt: false, mb: false, ml: false, mr: false, tl: false, tr: false, bl: false, br: false, mtr: false });
+  fCanvas.add(group);
+  fCanvas.setActiveObject(group);
+  handleMoving({ target: group });
+  emit('modified');
+};
+
+const deleteActive = () => {
+  if (!fCanvas) return;
+  const activeObjects = fCanvas.getActiveObjects();
+  if (activeObjects.length) {
+    activeObjects.forEach(obj => { if (obj !== paperRect) fCanvas!.remove(obj); });
+    fCanvas.discardActiveObject();
+    fCanvas.requestRenderAll();
+    emit('modified');
   }
 };
 
-// 生命周期绑定
-onMounted(() => {
-  initCanvas();
-  // TODO: 这里您可以去监听 Store 中选中的标签变化，然后调用 renderLabelData(store.currentLabel)
+const updateActiveTextProperty = (key: string, value: any) => {
+  const obj = fCanvas?.getActiveObject();
+  if (obj && obj.get('customType') === 'text') {
+    obj.set(key, value);
+    obj.setCoords();
+    handleMoving({ target: obj });
+    fCanvas?.requestRenderAll();
+    emit('modified');
+  }
+};
+
+const updateActiveLineProperty = (isVertical: boolean, lengthPx: number) => {
+  const obj = fCanvas?.getActiveObject() as any;
+  if (obj && obj.get('customType') === 'line') {
+    const left = obj.left!;
+    const top = obj.top!;
+    obj.set({
+      width: isVertical ? 2 : Math.max(lengthPx, 10),
+      height: isVertical ? Math.max(lengthPx, 10) : 2,
+      isVertical: isVertical,
+      scaleX: 1, scaleY: 1,
+      lockScalingX: isVertical,
+      lockScalingY: !isVertical
+    });
+    obj.setControlsVisibility({ tl: false, tr: false, bl: false, br: false, mtr: false, mt: isVertical, mb: isVertical, ml: !isVertical, mr: !isVertical });
+    obj.setCoords(); 
+    handleMoving({ target: obj });
+    fCanvas?.requestRenderAll();
+    syncActiveObject(); 
+    emit('modified');
+  }
+};
+
+const resetBarcodeSize = () => {
+  if (!fCanvas) return false;
+  let hasBarcode = false;
+  fCanvas.getObjects().forEach(obj => {
+    if (obj.get('customType') === 'barcode') {
+      obj.set({ scaleX: 1, scaleY: 1 });
+      obj.setCoords(); 
+      handleMoving({ target: obj });
+      hasBarcode = true;
+    }
+  });
+  if (hasBarcode) {
+    fCanvas.requestRenderAll();
+    syncActiveObject(); 
+    emit('modified');
+  }
+  return hasBarcode;
+};
+
+const exportToJSON = () => {
+  if (!fCanvas || !paperRect) return [];
+  const elements: any[] = [];
+  
+  fCanvas.getObjects().forEach(obj => {
+    if (obj === paperRect) return;
+    const leftPx = obj.left!;
+    const topPx = obj.top!;
+    const widthPx = (obj.width || 0) * (obj.scaleX || 1);
+    const heightPx = (obj.height || 0) * (obj.scaleY || 1);
+
+    const type = obj.get('customType');
+    const elData: any = { id: obj.get('id'), type: type, style: { left: `${leftPx}px`, top: `${topPx}px`, width: `${widthPx}px`, height: `${heightPx}px` }};
+
+    if (type === 'text') {
+      elData.content = (obj as any).text;
+      elData.fontSize = `${obj.get('fontSize')}px`;
+      elData.fontWeight = obj.get('fontWeight');
+    } else if (type === 'line') {
+      elData.isVertical = obj.get('isVertical');
+    } else if (type === 'image') {
+      elData.imgUrl = obj.get('imgUrl');
+      elData.originalUrl = obj.get('originalUrl');
+    } else if (type === 'barcode') {
+      elData.customW = obj.get('customW');
+      elData.customH = obj.get('customH');
+      elData.content = '123456789'; 
+    }
+    elements.push(elData);
+  });
+  return elements;
+};
+
+watch(() => [props.wMM, props.hMM], () => { 
+  if (!paperRect || !fCanvas) return;
+  paperRect.set({ width: Number(props.wMM) * mmToPx, height: Number(props.hMM) * mmToPx });
+  paperRect.setCoords();
+  centerAndZoom(fCanvas.getZoom() || 1); 
+  fCanvas.getObjects().forEach(obj => handleMoving({ target: obj }));
+  fCanvas.requestRenderAll();
+  emit('modified'); 
 });
 
+onMounted(() => {
+  setTimeout(() => {
+    initCanvas();
+    window.addEventListener('keydown', handleKeydown);
+  }, 50);
+});
+
+const handleKeydown = (e: KeyboardEvent) => {
+  const tag = (e.target as HTMLElement).tagName;
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return;
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    deleteActive();
+    e.preventDefault();
+  }
+};
+
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize);
+  window.removeEventListener('keydown', handleKeydown);
   if (fCanvas) fCanvas.dispose();
+});
+
+defineExpose({
+  addText, addLine, addImage, addBarcode, deleteActive, setCanvasZoom,
+  updateActiveTextProperty, updateActiveLineProperty, resetBarcodeSize, exportToJSON, 
+  getCanvas: () => canvasRef.value
 });
 </script>
 
 <style scoped>
-/* 隐藏原生默认的高亮轮廓 */
-:deep(.canvas-container) {
+/* 🌟 核心防御：完全禁止一切 CSS 对 Fabric Canvas 坐标系产生的致命偏移污染！ */
+:deep(canvas) {
   outline: none !important;
 }
 </style>
